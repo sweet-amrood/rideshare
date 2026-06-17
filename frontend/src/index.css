@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Outfit', 'Inter', sans-serif;
+  }
+
+  nav a,
+  aside a,
+  #root a {
+    text-decoration: none !important;
+  }
+
+  nav a:hover,
+  aside a:hover {
+    text-decoration: none !important;
+  }
+
+  /* App buttons — remove default white focus outline */
+  #root main button:not([class*='Mui']):focus,
+  #root main button:not([class*='Mui']):focus-visible {
+    outline: none !important;
+  }
+
+  #root main button:not([class*='Mui']) {
+    text-decoration: none;
+    font-family: inherit;
+  }
+
+  /* Onboarding / auth choice cards — no default grey button fill */
+  .choice-btn,
+  .modal-option-btn {
+    background-color: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    color: inherit;
+  }
+
+  .modal-option-btn:focus,
+  .modal-option-btn:focus-visible {
+    outline: none;
+  }
+
+  .modal-option-btn:focus-visible {
+    box-shadow: 0 0 0 2px rgba(79, 94, 244, 0.55);
+  }
+
+  /* Vehicle picker — no list bullets (Windows/legacy) */
+  [role='radiogroup'][aria-label='Vehicle'],
+  [role='radiogroup'][aria-label='Vehicle'] li {
+    list-style: none !important;
+    list-style-type: none !important;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center w-auto max-w-full px-5 py-2 min-h-[36px] bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg text-sm transition-colors cursor-pointer outline-none shadow-md shadow-brand-500/15 border-2 border-brand-400 hover:border-brand-300;
+  }
+
+  .btn-outline {
+    @apply bg-transparent text-white/75 font-medium rounded-lg text-sm transition-all cursor-pointer outline-none border-2 border-slateCustom-500 hover:border-brand-500 hover:text-brand-100 hover:bg-brand-500/10;
+  }
+
+  .btn-primary:focus,
+  .btn-primary:focus-visible {
+    outline: none !important;
+    box-shadow: 0 10px 25px -10px rgba(79, 94, 244, 0.35) !important;
+  }
+}
+
+/* Custom Premium UI Utilities */
+.glass-panel {
+  background: rgba(22, 29, 48, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-panel-hover:hover {
+  background: rgba(22, 29, 48, 0.85);
+  border-color: rgba(79, 94, 244, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(79, 94, 244, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Premium Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+::-webkit-scrollbar-thumb {
+  background: #212a44;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4f5ef4;
+}
+
+/* Grid Background Micro-pattern */
+.bg-grid {
+  background-size: 30px 30px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* Leaflet map */
+.leaflet-container {
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  background: #0b0f19;
+}
+
+.user-location-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Review modal — no grey native select/options (Windows) */
+.review-modal-select,
+.review-modal-select option {
+  background-color: #061210;
+  color: #fff;
+}

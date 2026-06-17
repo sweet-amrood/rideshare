@@ -1,0 +1,48 @@
+# Local development: backend + MongoDB
+# Usage (from backend/):
+#   docker compose up --build
+#
+# Production image only:
+#   docker build --target production -t ride-share-backend .
+#   docker run -p 5000:5000 --env-file .env ride-share-backend
+
+services:
+  api:
+    build:
+      context: .
+      target: development
+    container_name: ride-share-api
+    ports:
+      - "${PORT:-5000}:5000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+      # Helps file watching when the project folder is bind-mounted (Windows/macOS)
+      CHOKIDAR_USEPOLLING: "true"
+      MONGODB_URI: mongodb://mongo:27017/ride-share
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: ride-share-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
