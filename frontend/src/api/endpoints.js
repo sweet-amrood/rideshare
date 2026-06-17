@@ -67,7 +67,17 @@ export const endpoints = {
     cancel: (id) => `/bookings/${id}/cancel`,
     prepareRefund: (id) => `/bookings/${id}/refund/prepare`
   },
-  communities: '/communities'
+  communities: '/communities',
+  maps: {
+    bootstrap: '/maps/bootstrap',
+    autocomplete: '/maps/places/autocomplete',
+    placeDetails: '/maps/places/details',
+    reverseGeocode: '/maps/geocode/reverse',
+    directions: '/maps/directions',
+    distanceMatrix: '/maps/distance-matrix',
+    nearbyRides: '/maps/nearby-rides',
+    routeSuggestions: '/maps/route-suggestions'
+  }
 };
 
 export default endpoints;

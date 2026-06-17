@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Provider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Toaster } from 'react-hot-toast';
@@ -10,6 +10,9 @@ import { initializeAuth } from '@/store/slices/authSlice';
 import { useAppDispatch } from '@/store/hooks';
 import { SocketProvider } from '@/context/SocketContext';
 import AppRouter from '@/app/router';
+import { env } from '@/config/env';
+
+const Router = env.useHashRouter ? HashRouter : BrowserRouter;
 
 function Bootstrap({ children }) {
   const dispatch = useAppDispatch();
@@ -26,7 +29,7 @@ export default function AppProviders() {
     <Provider store={store}>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline enableColorScheme />
-        <BrowserRouter>
+        <Router>
           <Bootstrap>
             <SocketProvider>
               <AppRouter />
@@ -45,7 +48,7 @@ export default function AppProviders() {
               />
             </SocketProvider>
           </Bootstrap>
-        </BrowserRouter>
+        </Router>
       </ThemeProvider>
     </Provider>
   );

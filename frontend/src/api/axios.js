@@ -1,6 +1,7 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { env } from '@/config/env';
+import { getDemoApiResponse, isDemoActive } from '@/config/demo';
 
 const UPLOAD_PATHS = [
   '/documents/upload',
@@ -18,6 +19,17 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    if (env.demoMode || isDemoActive()) {
+      config.adapter = () =>
+        Promise.resolve({
+          data: getDemoApiResponse(config),
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config
+        });
+    }
+
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -43,7 +55,7 @@ api.interceptors.response.use(
 
     const status = error.response?.status;
 
-    if (status === 401 && !isAuthRoute) {
+    if (status === 401 && !isAuthRoute && !env.demoMode && !isDemoActive()) {
       localStorage.removeItem('token');
       if (!window.location.pathname.startsWith('/login')) {
         toast.error('Session expired. Please sign in again.');

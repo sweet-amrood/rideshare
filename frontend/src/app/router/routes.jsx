@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import RootLayout from '@/components/layouts/RootLayout';
 import AuthLayout from '@/components/layouts/AuthLayout';
@@ -7,26 +8,26 @@ import PublicRoute from './PublicRoute';
 import OnboardingGuard from './OnboardingGuard';
 import RoleRoute from './RoleRoute';
 
-import LoginPage from '@/features/auth/pages/LoginPage';
-import RegisterPage from '@/features/auth/pages/RegisterPage';
-import VerifyEmailPage from '@/features/auth/pages/VerifyEmailPage';
-import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
-import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
-import OnboardingPage from '@/features/auth/pages/OnboardingPage';
-import DriverSetupPage from '@/features/driver/pages/DriverSetupPage';
-import CompleteProfilePage from '@/features/auth/pages/CompleteProfilePage';
-import DriverResubmitDocsPage from '@/features/driver/pages/DriverResubmitDocsPage';
+const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
+const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
+const VerifyEmailPage = lazy(() => import('@/features/auth/pages/VerifyEmailPage'));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
+const OnboardingPage = lazy(() => import('@/features/auth/pages/OnboardingPage'));
+const DriverSetupPage = lazy(() => import('@/features/driver/pages/DriverSetupPage'));
+const CompleteProfilePage = lazy(() => import('@/features/auth/pages/CompleteProfilePage'));
+const DriverResubmitDocsPage = lazy(() => import('@/features/driver/pages/DriverResubmitDocsPage'));
 
-import Dashboard from '@/pages/Dashboard';
-import FindRide from '@/pages/FindRide';
-import OfferRide from '@/pages/OfferRide';
-import Profile from '@/pages/Profile';
-import PublicProfilePage from '@/features/profile/pages/PublicProfilePage';
-import ChatPage from '@/pages/ChatPage';
-import RideRequestChatPage from '@/pages/RideRequestChatPage';
-import MapPage from '@/pages/MapPage';
-import BookingHistoryPage from '@/features/bookings/pages/BookingHistoryPage';
-import CarpoolingPage from '@/features/carpool/pages/CarpoolingPage';
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const FindRide = lazy(() => import('@/pages/FindRide'));
+const OfferRide = lazy(() => import('@/pages/OfferRide'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const PublicProfilePage = lazy(() => import('@/features/profile/pages/PublicProfilePage'));
+const ChatPage = lazy(() => import('@/pages/ChatPage'));
+const RideRequestChatPage = lazy(() => import('@/pages/RideRequestChatPage'));
+const MapPage = lazy(() => import('@/pages/MapPage'));
+const BookingHistoryPage = lazy(() => import('@/features/bookings/pages/BookingHistoryPage'));
+const CarpoolingPage = lazy(() => import('@/features/carpool/pages/CarpoolingPage'));
 
 export const routes = [
   {

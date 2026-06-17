@@ -1,0 +1,10 @@
+# Use this when the Netlify site root is the repository (not the frontend folder).
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "frontend/dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -11,6 +11,7 @@ import CommuterRoleToggle from '@/components/layout/CommuterRoleToggle';
 import { profileService } from '@/api/services/profile.service';
 import { isDriver } from '@/utils/roles';
 import { getUserAvatarUrl } from '@/utils/defaultAvatar';
+import DemoModeBanner from '@/components/common/DemoModeBanner';
 
 const ICONS = {
   dashboard: LayoutDashboard,
@@ -82,7 +83,9 @@ export default function MainLayout() {
   }, [user?._id, user?.roles]);
 
   return (
-    <div className="flex h-screen bg-slateCustom-900 text-white overflow-hidden bg-grid">
+    <div className="flex h-screen flex-col bg-slateCustom-900 text-white overflow-hidden bg-grid">
+      <DemoModeBanner />
+      <div className="flex min-h-0 flex-1">
       <aside className="w-64 glass-panel border-y-0 border-l-0 hidden md:flex flex-col justify-between p-6">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
@@ -202,6 +205,7 @@ export default function MainLayout() {
         vehicles={pickVehicles.length ? pickVehicles : undefined}
         onDone={() => setVehicleModalOpen(false)}
       />
+      </div>
     </div>
   );
 }
