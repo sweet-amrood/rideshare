@@ -12,13 +12,27 @@ const { setAdminIo } = require('./admin/services/adminRealtime');
 const { setAppIo } = require('./services/realtimeService');
 const { verifyAdminToken } = require('./admin/utils/adminToken');
 
+function parseSocketOrigins() {
+  const raw = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || '';
+  const origins = raw
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  if (process.env.NODE_ENV !== 'production') {
+    origins.push('http://localhost:3000', 'http://127.0.0.1:3000');
+  }
+
+  return origins.length ? [...new Set(origins)] : '*';
+}
+
 // Setup HTTP Server
 const server = http.createServer(app);
 
 // Setup Socket.io Server with proper CORS parameters
 const io = socketio(server, {
   cors: {
-    origin: '*',
+    origin: parseSocketOrigins(),
     methods: ['GET', 'POST']
   }
 });

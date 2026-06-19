@@ -20,15 +20,40 @@ const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
+function parseCorsOrigins() {
+  const raw = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || '';
+  const origins = raw
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  if (process.env.NODE_ENV !== 'production') {
+    origins.push('http://localhost:3000', 'http://127.0.0.1:3000');
+  }
+
+  return [...new Set(origins)];
+}
+
+const allowedOrigins = parseCorsOrigins();
+
 // Set HTTP Security Headers
 app.use(helmet());
 
-// Enable Cross-Origin Resource Sharing
-app.use(cors({
-  origin: '*', // Scale this to strict production whitelists during deployment
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Enable Cross-Origin Resource Sharing (Netlify frontend → Render API)
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  })
+);
 
 // Body Parsers
 app.use(express.json());

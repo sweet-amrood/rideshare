@@ -23,7 +23,6 @@ import CommuterRoleToggle from '@/components/layout/CommuterRoleToggle';
 import { profileService } from '@/api/services/profile.service';
 import { isDriver } from '@/utils/roles';
 import { getUserAvatarUrl } from '@/utils/defaultAvatar';
-import DemoModeBanner from '@/components/common/DemoModeBanner';
 import NotificationBell from '@/components/layout/NotificationBell';
 import ModeSwitcher from '@/components/common/ModeSwitcher';
 import { paths } from '@/app/router/paths';
@@ -114,8 +113,6 @@ export default function AppLayout() {
         <div className="orb orb-brand w-[500px] h-[500px] -top-40 -left-40 opacity-30" />
         <div className="orb orb-violet w-[400px] h-[400px] top-1/2 -right-32 opacity-20" />
       </div>
-
-      <DemoModeBanner />
 
       <div className="flex min-h-0 flex-1 relative z-10">
         {/* ── DESKTOP SIDEBAR ── */}

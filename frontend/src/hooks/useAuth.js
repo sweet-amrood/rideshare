@@ -13,8 +13,7 @@ import {
   resetPassword,
   googleLogin,
   uploadDocuments,
-  completeOnboarding,
-  enterDemoMode
+  completeOnboarding
 } from '@/store/slices/authSlice';
 
 /**
@@ -154,16 +153,6 @@ export const useAuth = () => {
     [dispatch]
   );
 
-  const handleEnterDemo = useCallback(async () => {
-    dispatch(clearError());
-    try {
-      const result = await dispatch(enterDemoMode()).unwrap();
-      return { success: true, user: result.user, token: result.token };
-    } catch (err) {
-      return { success: false, error: err?.message || 'Could not start demo' };
-    }
-  }, [dispatch]);
-
   return {
     user,
     token,
@@ -183,7 +172,6 @@ export const useAuth = () => {
     resetPassword: handleReset,
     googleLogin: handleGoogle,
     uploadDocuments: handleUploadDocs,
-    enterDemoMode: handleEnterDemo,
     setUser: useCallback((payload) => dispatch(updateUser(payload)), [dispatch])
   };
 };

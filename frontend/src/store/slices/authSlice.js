@@ -3,14 +3,6 @@ import api from '@/api/axios';
 import { endpoints } from '@/api/endpoints';
 import { authService } from '@/api/services/auth.service';
 import { writeOnboardingComplete, clearOnboardingComplete } from '@/features/auth/utils/onboardingStorage';
-import {
-  DEMO_TOKEN,
-  DEMO_USER,
-  isDemoActive,
-  enableRuntimeDemo,
-  clearRuntimeDemo,
-  isDemoCredentialLogin
-} from '@/config/demo';
 
 const TOKEN_KEY = 'token';
 
@@ -28,11 +20,6 @@ const syncOnboardingFromUser = (state, user) => {
 export const initializeAuth = createAsyncThunk(
   'auth/initialize',
   async (_, { rejectWithValue }) => {
-    if (isDemoActive()) {
-      localStorage.setItem(TOKEN_KEY, DEMO_TOKEN);
-      return { user: DEMO_USER, token: DEMO_TOKEN };
-    }
-
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return { user: null, token: null };
 
@@ -55,19 +42,7 @@ const authSuccess = (data) => {
   return { user: data.user, token: data.token };
 };
 
-export const enterDemoMode = createAsyncThunk('auth/enterDemo', async () => {
-  enableRuntimeDemo();
-  localStorage.setItem(TOKEN_KEY, DEMO_TOKEN);
-  return { user: DEMO_USER, token: DEMO_TOKEN };
-});
-
 export const login = createAsyncThunk('auth/login', async ({ email, password }, { rejectWithValue }) => {
-  if (isDemoCredentialLogin(email, password)) {
-    enableRuntimeDemo();
-    localStorage.setItem(TOKEN_KEY, DEMO_TOKEN);
-    return { user: DEMO_USER, token: DEMO_TOKEN };
-  }
-
   try {
     return await authService.login(email, password);
   } catch (err) {
@@ -168,7 +143,6 @@ const authSlice = createSlice({
     },
     logout: (state) => {
       if (state.user?._id) clearOnboardingComplete(state.user._id);
-      clearRuntimeDemo();
       localStorage.removeItem(TOKEN_KEY);
       state.user = null;
       state.token = '';
@@ -206,15 +180,6 @@ const authSlice = createSlice({
         state.isInitialized = true;
         state.user = null;
         state.token = '';
-      })
-
-      .addCase(enterDemoMode.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.error = '';
-        state.loading = false;
-        state.isInitialized = true;
-        syncOnboardingFromUser(state, action.payload.user);
       })
 
       .addCase(login.fulfilled, (state, action) => {
