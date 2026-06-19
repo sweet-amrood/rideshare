@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import RootLayout from '@/layouts/RootLayout';
-import { marketingRoute, experienceRoute, appRoute, legacyAppRoutes } from '@/routes';
+import { homeRoute, marketingRoute, experienceRoute, appRoute, legacyAppRoutes } from '@/routes';
 import { paths } from './paths';
 
 export const routes = [
@@ -8,6 +8,7 @@ export const routes = [
     path: '/',
     element: <RootLayout />,
     children: [
+      homeRoute,
       marketingRoute,
       experienceRoute,
       appRoute,

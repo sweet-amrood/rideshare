@@ -7,11 +7,18 @@ const ContactPage = lazy(() => import('@/pages/marketing/ContactPage'));
 const ModeSelectPage = lazy(() => import('@/pages/marketing/ModeSelectPage'));
 const ExperiencePage = lazy(() => import('@/pages/marketing/ExperiencePage'));
 
-/** Marketing site routes (/, /about, /contact). Split-ready for its own deploy target. */
+/**
+ * Home (/) renders its own marketing chrome (header/footer) and embeds the
+ * cinematic journey. It lives OUTSIDE MarketingLayout because that layout wraps
+ * pages in a transformed PageTransition, which would break GSAP ScrollTrigger
+ * pinning used by the embedded horizontal journey.
+ */
+export const homeRoute = { index: true, element: <HomeRoute /> };
+
+/** Marketing site routes (/about, /contact). Split-ready for its own deploy target. */
 export const marketingRoute = {
   element: <MarketingLayout />,
   children: [
-    { index: true, element: <HomeRoute /> },
     { path: 'about', element: <AboutPage /> },
     { path: 'contact', element: <ContactPage /> },
     { path: 'choose-mode', element: <ModeSelectPage /> }

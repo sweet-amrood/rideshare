@@ -109,7 +109,7 @@ function SceneCaption({ index, title, sub }) {
   );
 }
 
-export default function HorizontalJourney() {
+export default function HorizontalJourney({ embedded = false }) {
   const reduceMotion = useReducedMotion();
   const navigate = useNavigate();
   const { setMode, USER_MODES } = useUserMode();
@@ -121,6 +121,9 @@ export default function HorizontalJourney() {
   const worldRef = useRef(null);
   const bgRef = useRef(null);
   const heroRef = useRef(null);
+  const skyRef = useRef(null);
+  const skylineRef = useRef(null);
+  const tintRef = useRef(null);
 
   const openApp = () => {
     setMode(USER_MODES.APP);
@@ -141,8 +144,10 @@ export default function HorizontalJourney() {
 
       // ── Initial states ──
       gsap.set(hero, { x: vw(-16), autoAlpha: 0 });
+      gsap.set(q('.xj-pax'), { scale: 0.3 });
       gsap.set(q('.xj-conn--a'), { rotation: -28, scaleX: 0, transformOrigin: 'left center' });
       gsap.set(q('.xj-conn--b'), { rotation: 12, scaleX: 0, transformOrigin: 'left center' });
+      gsap.set(tintRef.current, { backgroundColor: 'rgba(60,80,150,0)' });
 
       // ── Ambient loops (scroll-independent, run continuously) ──
       q('.xj-chaos-car').forEach((car, i) => {
@@ -185,14 +190,27 @@ export default function HorizontalJourney() {
         }
       });
 
-      // Camera + parallax span the full timeline
+      // Camera + multi-layer parallax span the full timeline (far → near)
       tl.to(world, { x: () => -distance(), duration: 6 }, 0);
+      tl.to(skyRef.current, { x: () => -distance() * 0.04, duration: 6 }, 0);
+      tl.to(skylineRef.current, { x: () => -distance() * 0.12, duration: 6 }, 0);
       tl.fromTo(bgRef.current, { x: 0 }, { x: () => distance() * 0.06, duration: 6 }, 0);
+
+      // Ambient colour arc: chaos warms, optimisation cools, launch glows brand.
+      tl.to(tintRef.current, { backgroundColor: 'rgba(150,72,58,0.34)', duration: 0.9 }, 0.6);
+      tl.to(tintRef.current, { backgroundColor: 'rgba(72,82,150,0.26)', duration: 0.9 }, 1.8);
+      tl.to(tintRef.current, { backgroundColor: 'rgba(56,92,142,0.22)', duration: 0.9 }, 2.9);
+      tl.to(tintRef.current, { backgroundColor: 'rgba(40,120,150,0.30)', duration: 0.9 }, 4.2);
+      tl.to(tintRef.current, { backgroundColor: 'rgba(64,104,214,0.30)', duration: 0.9 }, 5.4);
 
       // Scene reveals (placed near each scene's centre time)
       tl.from(q('.xj-scene-0 .xj-block'), { yPercent: 22, opacity: 0, stagger: 0.04, duration: 0.6 }, 0);
       tl.from(q('.xj-chaos-car'), { opacity: 0, scale: 0.4, stagger: 0.04, duration: 0.5 }, 0.5);
-      tl.from(q('.xj-scene-2 .xj-node'), { scale: 0, opacity: 0, stagger: 0.05, duration: 0.5 }, 1.5);
+      tl.from(
+        q('.xj-scene-2 .xj-node'),
+        { scale: 0, opacity: 0, stagger: 0.05, duration: 0.5, ease: 'back.out(1.7)' },
+        1.5
+      );
       tl.from(
         q('.xj-scene-2 .xj-route'),
         { scaleX: 0, opacity: 0, transformOrigin: 'left center', stagger: 0.04, duration: 0.5 },
@@ -231,20 +249,22 @@ export default function HorizontalJourney() {
       // ── Hero car beats (same timeline → always in sync, never rewinds) ──
       tl.to(hero, { x: () => vw(18), autoAlpha: 1, duration: 0.6, ease: 'power1.out' }, 0.4);
       tl.to(hero, { x: () => vw(46), duration: 1.2 }, 1.0);
-      // riders matched: pins + connectors appear as the car enters scene 3
-      tl.to(q('.xj-pax'), { autoAlpha: 1, duration: 0.4, ease: 'power1.out' }, 2.2);
-      tl.to(q('.xj-conn--a'), { scaleX: 1, autoAlpha: 1, duration: 0.4, ease: 'power1.out' }, 2.2);
-      tl.to(q('.xj-conn--b'), { scaleX: 1, autoAlpha: 1, duration: 0.4, ease: 'power1.out' }, 2.35);
+      // riders matched: pins pop in + connectors snap with a little overshoot
+      tl.to(q('.xj-pax'), { autoAlpha: 1, scale: 1, duration: 0.45, ease: 'back.out(2.2)' }, 2.2);
+      tl.to(q('.xj-conn--a'), { scaleX: 1, autoAlpha: 1, duration: 0.4, ease: 'back.out(1.4)' }, 2.2);
+      tl.to(q('.xj-conn--b'), { scaleX: 1, autoAlpha: 1, duration: 0.4, ease: 'back.out(1.4)' }, 2.35);
       // car slows and stops at centre
       tl.to(hero, { x: () => vw(50), duration: 0.8, ease: 'power2.out' }, 2.2);
-      // rider one hops in
+      // rider one hops in → seat indicator pops on
       tl.to(q('.xj-pax--a'), { x: -92, y: 54, scale: 0.15, autoAlpha: 0, duration: 0.3, ease: 'power2.in' }, 3.0);
       tl.to(q('.xj-conn--a'), { autoAlpha: 0, duration: 0.2 }, 3.0);
-      tl.to(q('.xj-seatdot--a'), { backgroundColor: '#34d399', boxShadow: '0 0 10px #34d399', duration: 0.2 }, 3.2);
-      // rider two hops in (carpool formed)
+      tl.to(q('.xj-seatdot--a'), { backgroundColor: '#34d399', boxShadow: '0 0 12px #34d399', scale: 1.7, duration: 0.2, ease: 'back.out(3)' }, 3.2);
+      tl.to(q('.xj-seatdot--a'), { scale: 1, duration: 0.18 }, 3.4);
+      // rider two hops in (carpool formed) → seat indicator pops on
       tl.to(q('.xj-pax--b'), { x: -118, y: -26, scale: 0.15, autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, 3.45);
       tl.to(q('.xj-conn--b'), { autoAlpha: 0, duration: 0.2 }, 3.45);
-      tl.to(q('.xj-seatdot--b'), { backgroundColor: '#34d399', boxShadow: '0 0 10px #34d399', duration: 0.2 }, 3.65);
+      tl.to(q('.xj-seatdot--b'), { backgroundColor: '#34d399', boxShadow: '0 0 12px #34d399', scale: 1.7, duration: 0.2, ease: 'back.out(3)' }, 3.65);
+      tl.to(q('.xj-seatdot--b'), { scale: 1, duration: 0.18 }, 3.85);
       // carpool rolls on, then glides onto the clean route, then exits
       tl.to(hero, { x: () => vw(56), duration: 0.9 }, 3.9);
       tl.to(hero, { x: () => vw(62), duration: 1.0 }, 4.7);
@@ -261,38 +281,44 @@ export default function HorizontalJourney() {
 
   return (
     <div ref={rootRef} className={`xj-root ${reduceMotion ? 'xj-reduced' : ''}`}>
-      {/* ── Overlay chrome ── */}
-      <div className="xj-chrome">
-        <div className="xj-topbar">
-          <Link to={paths.home} className="xj-logo" aria-label="Ride Share home">
-            <span className="xj-logo-mark">
-              <Car className="h-4 w-4 text-white" />
-            </span>
-            <span className="text-sm">RIDE SHARE</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <AppButton type="button" size="sm" onClick={openApp}>
-              {isLoggedIn ? 'Open dashboard' : 'Open app'}
-              <ArrowRight className="h-4 w-4" />
-            </AppButton>
-            <Link to={paths.home} aria-label="Exit experience">
-              <AppButton type="button" variant="outline" size="sm">
-                <X className="h-4 w-4" />
-              </AppButton>
+      {/* ── Overlay chrome (standalone only) ── */}
+      {!embedded && (
+        <div className="xj-chrome">
+          <div className="xj-topbar">
+            <Link to={paths.home} className="xj-logo" aria-label="Ride Share home">
+              <span className="xj-logo-mark">
+                <Car className="h-4 w-4 text-white" />
+              </span>
+              <span className="text-sm">RIDE SHARE</span>
             </Link>
+            <div className="flex items-center gap-2">
+              <AppButton type="button" size="sm" onClick={openApp}>
+                {isLoggedIn ? 'Open dashboard' : 'Open app'}
+                <ArrowRight className="h-4 w-4" />
+              </AppButton>
+              <Link to={paths.home} aria-label="Exit experience">
+                <AppButton type="button" variant="outline" size="sm">
+                  <X className="h-4 w-4" />
+                </AppButton>
+              </Link>
+            </div>
           </div>
-        </div>
 
-        {!reduceMotion && (
-          <div className="xj-scroll-hint">
-            <MousePointer2 className="h-4 w-4" />
-            <span>Scroll to travel</span>
-          </div>
-        )}
-      </div>
+          {!reduceMotion && (
+            <div className="xj-scroll-hint">
+              <MousePointer2 className="h-4 w-4" />
+              <span>Scroll to travel</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Pinned camera viewport ── */}
       <div ref={viewportRef} className="xj-viewport">
+        {/* Parallax depth layers (screen-space, behind the world) */}
+        <div ref={skyRef} className="xj-sky" />
+        <div ref={skylineRef} className="xj-skyline" />
+
         <div ref={worldRef} className="xj-world">
           {/* Continuous environment spanning the whole world */}
           <div ref={bgRef} className="xj-bg" style={{ width: `${total * 100}vw` }}>
@@ -494,20 +520,15 @@ export default function HorizontalJourney() {
                 Verified carpools and on-demand rides, matched in real time. Save money, cut
                 traffic, and commute smarter — together.
               </p>
-              <div className="xj-cta">
-                <AppButton type="button" size="lg" onClick={openApp}>
-                  {isLoggedIn ? 'Go to dashboard' : 'Get started free'}
-                  <ArrowRight className="h-4 w-4" />
-                </AppButton>
-                <Link to={paths.about} className="no-underline">
-                  <AppButton type="button" variant="outline" size="lg">
-                    Learn more
-                  </AppButton>
-                </Link>
-              </div>
+              <span className="xj-hero-cue">Keep scrolling to get started</span>
             </div>
           </section>
         </div>
+
+        {/* Ambient mood tint (shifts colour across the narrative) */}
+        <div ref={tintRef} className="xj-tint" />
+        {/* Edge vignette — melts the pinned scene into the page above/below */}
+        <div className="xj-vignette" />
 
         {/* ── Continuous hero car overlay (screen-fixed on the road) ── */}
         <div className="xj-herolayer">
