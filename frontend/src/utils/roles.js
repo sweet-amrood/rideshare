@@ -2,6 +2,8 @@
  * Commuter roles: RIDER (passenger) or DRIVER (offer rides) — one active role at a time.
  */
 
+import { paths } from '@/app/router/paths';
+
 export const ROLES = {
   RIDER: 'RIDER',
   DRIVER: 'DRIVER'
@@ -40,13 +42,13 @@ export function hasAnyRole(roles, required) {
 
 /** Main app navigation — filtered by role */
 export const APP_NAV_ITEMS = [
-  { to: '/dashboard', label: 'Dashboard', shortLabel: 'Home', iconKey: 'dashboard', end: true, roles: [ROLES.RIDER, ROLES.DRIVER] },
-  { to: '/find', label: 'Book Ride', shortLabel: 'Book', iconKey: 'find', roles: [ROLES.RIDER] },
-  { to: '/carpooling', label: 'Carpooling', shortLabel: 'Carpool', iconKey: 'carpool', roles: [ROLES.RIDER, ROLES.DRIVER] },
-  { to: '/bookings', label: 'My bookings', shortLabel: 'Bookings', iconKey: 'bookings', roles: [ROLES.RIDER] },
-  { to: '/offer', label: 'Driver hub', shortLabel: 'Driver', iconKey: 'driver', roles: [ROLES.DRIVER] },
-  { to: '/map', label: 'Live Map', shortLabel: 'Map', iconKey: 'map', roles: [ROLES.RIDER, ROLES.DRIVER] },
-  { to: '/profile', label: 'Profile', shortLabel: 'Profile', iconKey: 'profile', roles: [ROLES.RIDER, ROLES.DRIVER] }
+  { to: paths.dashboard, label: 'Dashboard', shortLabel: 'Home', iconKey: 'dashboard', end: true, roles: [ROLES.RIDER, ROLES.DRIVER] },
+  { to: paths.find, label: 'Book Ride', shortLabel: 'Book', iconKey: 'find', roles: [ROLES.RIDER] },
+  { to: paths.carpooling, label: 'Carpooling', shortLabel: 'Carpool', iconKey: 'carpool', roles: [ROLES.RIDER, ROLES.DRIVER] },
+  { to: paths.bookings, label: 'My bookings', shortLabel: 'Bookings', iconKey: 'bookings', roles: [ROLES.RIDER] },
+  { to: paths.offer, label: 'Driver hub', shortLabel: 'Driver', iconKey: 'driver', roles: [ROLES.DRIVER] },
+  { to: paths.map, label: 'Live Map', shortLabel: 'Map', iconKey: 'map', roles: [ROLES.RIDER, ROLES.DRIVER] },
+  { to: paths.profile, label: 'Profile', shortLabel: 'Profile', iconKey: 'profile', roles: [ROLES.RIDER, ROLES.DRIVER] }
 ];
 
 export function getNavItemsForRoles(roles) {
@@ -70,7 +72,7 @@ export function getProfileTabsForRoles(roles) {
 }
 
 export function getDefaultHomePath(roles) {
-  if (isDriver(roles) && !isRider(roles)) return '/offer';
-  if (isRider(roles)) return '/find';
-  return '/dashboard';
+  if (isDriver(roles) && !isRider(roles)) return paths.offer;
+  if (isRider(roles)) return paths.find;
+  return paths.dashboard;
 }

@@ -9,6 +9,7 @@ import AuthSubmitButton from '@/features/auth/components/AuthSubmitButton';
 import { profileService } from '@/api/services/profile.service';
 import { validateEmail, validateName, validatePhone } from '@/features/auth/utils/validation';
 import { filterDigits, filterPersonName } from '@/utils/inputFilters';
+import { paths } from '@/app/router/paths';
 
 export default function CompleteProfilePage() {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ export default function CompleteProfilePage() {
       }
       toast.success('Profile saved!');
       const needsOnboarding = u?.onboardingComplete === false || user?.onboardingComplete === false;
-      navigate(needsOnboarding ? '/onboarding' : '/dashboard', { replace: true });
+      navigate(needsOnboarding ? paths.onboarding : paths.dashboard, { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not save profile');
     } finally {

@@ -6,6 +6,29 @@ const { calculateSeatPricing, estimateDistanceKm } = require('../utils/ridePrici
 const { generateOccurrenceDates, matchesRecurrenceDay } = require('../utils/rideRecurrence');
 const { validateOfferPayload, passengerMeetsRestrictions } = require('../utils/rideValidation');
 const { seatSummary } = require('../utils/rideSeats');
+const { attachLiveSeatFields } = require('./seatSyncService');
+const { initializeRideRoute } = require('./routeService');
+const { estimateCarpoolPublishPricing } = require('./carpoolPricingService');
+const { quotePassengerFare } = require('./fareService');
+const {
+  DEFAULT_SIDE_DETOUR_KM,
+  MAX_SIDE_DETOUR_KM
+} = require('../constants/carpoolRoute');
+
+const getSideDetourKm = (ride) => {
+  const v = ride.restrictions?.sideDetourKm;
+  if (Number.isFinite(v) && v >= 1) return Math.min(MAX_SIDE_DETOUR_KM, v);
+  return DEFAULT_SIDE_DETOUR_KM;
+};
+
+const passengerWithinSideDetour = (ride, passengerLat, passengerLng, destLat, destLng) => {
+  const sideM = getSideDetourKm(ride) * 1000;
+  const [oLng, oLat] = ride.origin.location.coordinates;
+  if (haversineMeters(passengerLat, passengerLng, oLat, oLng) > sideM) return false;
+  if (destLat == null || destLng == null) return true;
+  const [dLng, dLat] = ride.destination.location.coordinates;
+  return haversineMeters(destLat, destLng, dLat, dLng) <= sideM;
+};
 
 const buildRideDoc = (payload, driverId, vehicleId, departureDate, seriesId = null) => {
   const {
@@ -52,13 +75,20 @@ const buildRideDoc = (payload, driverId, vehicleId, departureDate, seriesId = nu
     pricing: {
       totalFuelCost: pricing?.totalFuelCost || 0,
       distanceKm: pricing?.distanceKm || 0,
+      platformRatePerKm: pricing?.platformRatePerKm || pricing?.fuelRatePerKm || 0,
+      fuelRatePerKm: pricing?.platformRatePerKm || pricing?.fuelRatePerKm || 0,
+      acPremiumApplied: !!pricing?.acPremiumApplied,
       currency: pricing?.currency || 'PKR',
       splitAmong: pricing?.splitAmong || totalSeats
     },
     restrictions: {
       womenOnly: !!restrictions?.womenOnly,
       universityOnly: !!restrictions?.universityOnly,
-      officeOnly: !!restrictions?.officeOnly
+      officeOnly: !!restrictions?.officeOnly,
+      sideDetourKm: Math.min(
+        MAX_SIDE_DETOUR_KM,
+        Math.max(1, parseFloat(restrictions?.sideDetourKm) || DEFAULT_SIDE_DETOUR_KM)
+      )
     },
     amenities: {
       luggageAllowed: amenities?.luggageAllowed || 'SMALL',
@@ -125,14 +155,14 @@ const offerRide = async (userId, body) => {
     estimateDistanceKm(body.originCoords, body.destinationCoords);
 
   const totalSeats = parseInt(body.totalSeats, 10);
-  const pricingResult = calculateSeatPricing({
-    totalFuelCost: body.totalFuelCost ?? body.pricing?.totalFuelCost,
-    passengerSeats: totalSeats,
+  const hasAC = body.amenities?.hasAC !== false;
+  const pricingResult = await estimateCarpoolPublishPricing({
     distanceKm,
-    autoFuelFromDistance: body.autoFuelFromDistance !== false
+    totalSeats,
+    hasAC
   });
 
-  const costPerSeat = body.costPerSeat ?? pricingResult.costPerSeat;
+  const costPerSeat = pricingResult.costPerSeat;
   const rideType = validation.rideType;
 
   const payload = {
@@ -141,9 +171,12 @@ const offerRide = async (userId, body) => {
     costPerSeat,
     rideType,
     pricing: {
-      totalFuelCost: pricingResult.totalFuelCost,
+      totalFuelCost: pricingResult.totalFareCost,
       distanceKm: pricingResult.distanceKm,
-      currency: 'PKR',
+      platformRatePerKm: pricingResult.platformRatePerKm,
+      fuelRatePerKm: pricingResult.platformRatePerKm,
+      acPremiumApplied: pricingResult.acPremiumApplied,
+      currency: pricingResult.currency,
       splitAmong: totalSeats
     },
     recurrence: {
@@ -181,6 +214,7 @@ const offerRide = async (userId, body) => {
         seriesId
       );
       const ride = await Ride.create(doc);
+      await initializeRideRoute(ride);
       if (!seriesId) {
         seriesId = ride._id;
         ride.seriesId = seriesId;
@@ -203,18 +237,18 @@ const offerRide = async (userId, body) => {
     departureDate
   );
   const ride = await Ride.create(doc);
+  await initializeRideRoute(ride);
   return { rides: [ride], primary: ride, count: 1 };
 };
 
-const estimatePrice = (body) => {
+const estimatePrice = async (body) => {
   const distanceKm =
     body.distanceKm ||
     estimateDistanceKm(body.originCoords, body.destinationCoords);
-  return calculateSeatPricing({
-    totalFuelCost: body.totalFuelCost,
-    passengerSeats: body.totalSeats || body.passengerSeats || 1,
+  return estimateCarpoolPublishPricing({
     distanceKm,
-    autoFuelFromDistance: body.autoFuelFromDistance !== false
+    totalSeats: body.totalSeats || body.passengerSeats || 1,
+    hasAC: body.hasAC !== false && body.amenities?.hasAC !== false
   });
 };
 
@@ -242,18 +276,21 @@ const searchRides = async (filters, passenger = null) => {
     throw err;
   }
 
-  const searchRange = parseInt(filters.radiusMeters, 10) || 5000;
+  const passengerLat = parseFloat(originLat);
+  const passengerLng = parseFloat(originLng);
+  const targetDestLat = destLat != null && destLng != null ? parseFloat(destLat) : null;
+  const targetDestLng = destLat != null && destLng != null ? parseFloat(destLng) : null;
+  const geoQueryRadiusM = MAX_SIDE_DETOUR_KM * 1000;
 
   const query = {
     status: 'SCHEDULED',
-    availableSeats: { $gt: 0 },
     'origin.location': {
       $nearSphere: {
         $geometry: {
           type: 'Point',
-          coordinates: [parseFloat(originLng), parseFloat(originLat)]
+          coordinates: [passengerLng, passengerLat]
         },
-        $maxDistance: searchRange
+        $maxDistance: geoQueryRadiusM
       }
     }
   };
@@ -271,14 +308,9 @@ const searchRides = async (filters, passenger = null) => {
     .populate('vehicleId')
     .limit(50);
 
-  if (destLng && destLat) {
-    const targetDestLng = parseFloat(destLng);
-    const targetDestLat = parseFloat(destLat);
-    rides = rides.filter((ride) => {
-      const [lng, lat] = ride.destination.location.coordinates;
-      return haversineMeters(lat, lng, targetDestLat, targetDestLng) <= searchRange;
-    });
-  }
+  rides = rides.filter((ride) =>
+    passengerWithinSideDetour(ride, passengerLat, passengerLng, targetDestLat, targetDestLng)
+  );
 
   if (departureDate) {
     const searchDayStart = new Date(departureDate);
@@ -305,11 +337,6 @@ const searchRides = async (filters, passenger = null) => {
     );
   }
 
-  const seats = parseInt(seatsNeeded, 10);
-  if (seats > 0) {
-    rides = rides.filter((ride) => ride.availableSeats >= seats);
-  }
-
   if (luggageAllowed) {
     const order = ['NONE', 'SMALL', 'MEDIUM', 'LARGE'];
     const needIdx = order.indexOf(luggageAllowed);
@@ -321,11 +348,74 @@ const searchRides = async (filters, passenger = null) => {
     }
   }
 
-  return rides.map((r) => {
-    const obj = r.toObject();
-    obj.seatSummary = seatSummary(r);
-    return obj;
-  });
+  const seats = parseInt(seatsNeeded, 10);
+
+  const seatsRequested = seats > 0 ? seats : 1;
+
+  const enriched = await Promise.all(
+    rides.map(async (r) => {
+      const live = await attachLiveSeatFields(r);
+      if (!live) return null;
+
+      if (targetDestLat != null && targetDestLng != null) {
+        const quote = await quotePassengerFare(live.ride, {
+          pickup: {
+            address: filters.pickupAddress || '',
+            location: { type: 'Point', coordinates: [passengerLng, passengerLat] }
+          },
+          dropoff: {
+            address: filters.dropoffAddress || '',
+            location: { type: 'Point', coordinates: [targetDestLng, targetDestLat] }
+          },
+          seatsBooked: seatsRequested
+        });
+
+        const obj = live.ride.toObject();
+        obj.seatSummary = live.seatSummary;
+        obj.availableSeats = live.seatSummary.effectiveAvailable;
+        obj.bookedSeats = live.seatSummary.bookedSeats;
+        obj.pendingSeats = live.pendingSeats;
+        obj.vehicleType = live.ride.vehicleId?.vehicleType || 'CAR';
+        obj.farePreview = {
+          accepted: quote.accepted,
+          rejectionReason: quote.rejectionReason,
+          costPerSeatNow: quote.costPerSeatNow,
+          farePerSeat: quote.farePerSeat,
+          yourTotal: quote.yourTotal,
+          totalDistanceKm: quote.totalDistanceKm,
+          detourDistanceKm: quote.detourDistanceKm,
+          mainDistanceKm: quote.mainDistanceKm,
+          tripFareRs: quote.tripFareRs,
+          detourFareRs: quote.detourFareRs,
+          ratePerKm: quote.ratePerKm,
+          costPerKm: quote.costPerKm,
+          hasAC: quote.hasAC,
+          totalFareCost: quote.totalFareCost,
+          seatsBooked: seatsRequested,
+          costPerSeatIfFull: quote.costPerSeatIfFull,
+          formula: quote.formula
+        };
+        if (!quote.accepted) return null;
+        return obj;
+      }
+
+      const obj = live.ride.toObject();
+      obj.seatSummary = live.seatSummary;
+      obj.availableSeats = live.seatSummary.effectiveAvailable;
+      obj.bookedSeats = live.seatSummary.bookedSeats;
+      obj.pendingSeats = live.pendingSeats;
+      obj.vehicleType = live.ride.vehicleId?.vehicleType || 'CAR';
+      return obj;
+    })
+  );
+
+  let result = enriched.filter(Boolean);
+
+  if (seats > 0) {
+    result = result.filter((ride) => ride.availableSeats >= seats);
+  }
+
+  return result;
 };
 
 const getMyOffers = async (driverId, status) => {

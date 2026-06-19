@@ -36,6 +36,7 @@ import {
   driverBtnPrimary
 } from '@/features/driver/driverTheme';
 import { approvedCarVehicles } from '@/utils/driverVehicles';
+import { paths } from '@/app/router/paths';
 
 function Section({ title, icon: Icon, children }) {
   return (
@@ -136,9 +137,8 @@ export default function OfferRideForm({ onPublished }) {
         destinationAddress: form.destinationAddress,
         destinationCoords: form.destinationCoords,
         totalSeats: form.totalSeats,
-        totalFuelCost: form.totalFuelCost ? Number(form.totalFuelCost) : undefined,
         costPerSeat: form.costPerSeat,
-        autoFuelFromDistance: form.autoFuelFromDistance,
+        distanceKm: form.distanceKm,
         rideType: form.rideType,
         isRecurring: form.rideType === RIDE_TYPES.RECURRING,
         departureDate,
@@ -151,7 +151,9 @@ export default function OfferRideForm({ onPublished }) {
         notes: form.notes
       });
       setSuccess(res.message || 'Ride published!');
-      setTimeout(() => onPublished?.(), 1200);
+      const keepVehicle = form.vehicleId;
+      setForm({ ...DEFAULT_FORM, vehicleId: keepVehicle });
+      onPublished?.();
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to publish ride');
     } finally {
@@ -173,7 +175,7 @@ export default function OfferRideForm({ onPublished }) {
         <p className="text-sm text-white/70 mt-1">
           Carpools require a verified car. Bikes and rickshaws are for on-demand rides only.
         </p>
-        <button type="button" onClick={() => navigate('/profile')} className={`mt-4 ${driverBtnPrimary}`}>
+        <button type="button" onClick={() => navigate(paths.profile)} className={`mt-4 ${driverBtnPrimary}`}>
           Go to Profile
         </button>
       </div>
@@ -222,7 +224,7 @@ export default function OfferRideForm({ onPublished }) {
 
       <Section title="Your car (carpool)" icon={Car}>
         <p className="text-xs text-white/60 mb-2">
-          Share seats on a scheduled route. Passengers book individual seats; fuel cost is split.
+          Share seats on a scheduled route. Fare per seat is calculated automatically from platform rates.
         </p>
         <select
           value={form.vehicleId}
@@ -357,19 +359,45 @@ export default function OfferRideForm({ onPublished }) {
           />
           <span className="font-semibold text-emerald-300">{form.totalSeats} seats</span>
         </label>
-        <PricingCalculator variant="driver" {...{
-          totalSeats: form.totalSeats,
-          totalFuelCost: form.totalFuelCost,
-          onFuelChange: (v) => patch({ totalFuelCost: v }),
-          onCostPerSeatChange: (c) => patch({ costPerSeat: c }),
-          originCoords: form.originCoords,
-          destinationCoords: form.destinationCoords,
-          autoFuelFromDistance: form.autoFuelFromDistance,
-          onAutoFuelChange: (v) => patch({ autoFuelFromDistance: v })
-        }} />
+        <PricingCalculator
+          variant="driver"
+          totalSeats={form.totalSeats}
+          hasAC={form.amenities.hasAC}
+          onCostPerSeatChange={(c) => patch({ costPerSeat: c })}
+          onDistanceKmChange={(d) => patch({ distanceKm: d })}
+          originCoords={form.originCoords}
+          destinationCoords={form.destinationCoords}
+        />
       </Section>
 
       <Section title="Restrictions" icon={Shield}>
+        <label className="block text-sm mb-4">
+          <span className="text-white/70 flex items-center gap-1 mb-1">
+            <MapPin className="w-3.5 h-3.5" /> Pickup & destination range (each side)
+          </span>
+          <p className="text-[11px] text-white/50 mb-2">
+            How far passengers can be from your route start and end. Default 3 km per side.
+          </p>
+          <input
+            type="range"
+            min={1}
+            max={15}
+            step={0.5}
+            value={form.restrictions.sideDetourKm ?? 3}
+            onChange={(e) =>
+              patch({
+                restrictions: {
+                  ...form.restrictions,
+                  sideDetourKm: Number(e.target.value)
+                }
+              })
+            }
+            className="w-full accent-emerald-500"
+          />
+          <span className="font-semibold text-emerald-300">
+            {(form.restrictions.sideDetourKm ?? 3).toFixed(1)} km per side
+          </span>
+        </label>
         <div className="space-y-2">
           {[
             { key: 'womenOnly', label: 'Women-only' },
@@ -439,7 +467,7 @@ export default function OfferRideForm({ onPublished }) {
             }
             className="rounded accent-emerald-500"
           />
-          Air conditioning (AC)
+          Air conditioning (AC) — slightly higher platform rate when enabled
         </label>
       </Section>
 

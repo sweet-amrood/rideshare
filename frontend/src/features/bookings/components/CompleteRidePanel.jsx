@@ -7,7 +7,7 @@ import LiveSeatTracker from './LiveSeatTracker';
 export default function CompleteRidePanel({ ride, onCompleted }) {
   const [loading, setLoading] = useState(false);
 
-  if (!ride || ride.status === 'COMPLETED' || ride.status === 'CANCELLED') {
+  if (!ride || ride.status !== 'ACTIVE') {
     return null;
   }
 
@@ -32,7 +32,7 @@ export default function CompleteRidePanel({ ride, onCompleted }) {
         Ride completion
       </p>
       <p className="text-xs text-white/60">
-        Completes the trip, marks confirmed passengers as done, and cancels pending requests.
+        End the trip for all confirmed passengers and close any pending requests.
       </p>
       <LiveSeatTracker rideId={ride._id} compact />
       <button

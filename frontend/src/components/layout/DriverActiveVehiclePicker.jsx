@@ -26,11 +26,27 @@ export default function DriverActiveVehiclePicker({ onNeedsPick }) {
       const res = await profileService.getDriverStatus();
       const list = res.data?.approvedVehicles || [];
       setVehicles(list);
-      const id = res.data?.activeVehicleId ? String(res.data.activeVehicleId) : '';
+      let id = res.data?.activeVehicleId ? String(res.data.activeVehicleId) : '';
       setActiveId(id);
       if (list.length > 1 && !id) onNeedsPick?.(true);
       else onNeedsPick?.(false);
-      if (res.data?.activeVehicleId) {
+      if (list.length === 1 && !id) {
+        try {
+          const pickRes = await profileService.updateDriverStatus({
+            activeVehicleId: list[0]._id
+          });
+          id = String(list[0]._id);
+          setActiveId(id);
+          setUser({
+            driverAvailability: {
+              ...user?.driverAvailability,
+              ...pickRes.data
+            }
+          });
+        } catch {
+          /* backend will auto-select on go-online */
+        }
+      } else if (res.data?.activeVehicleId) {
         setUser({
           driverAvailability: {
             ...user?.driverAvailability,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Car,
   Calendar,
@@ -14,11 +15,15 @@ import {
 import CarpoolLiveMap from '@/components/map/CarpoolLiveMap';
 import LiveSeatTracker from '@/features/bookings/components/LiveSeatTracker';
 import CompleteRidePanel from '@/features/bookings/components/CompleteRidePanel';
+import StartRidePanel from '@/features/bookings/components/StartRidePanel';
 import LocationLabel from '@/components/common/LocationLabel';
 import { getVehicleTypeLabel } from '@/features/rides/constants/searchByVehicleType';
 import { bookingService } from '@/api/services/booking.service';
+import AnimatedCard from '@/components/animations/AnimatedCard';
+import { fadeMedium } from '@/animations/motionConfig';
+import { paths } from '@/app/router/paths';
 
-const CARPOOL_CHAT_STATE = { from: '/carpooling', fromLabel: 'Carpooling' };
+const CARPOOL_CHAT_STATE = { from: paths.carpooling, fromLabel: 'Carpooling' };
 
 export default function DriverCarpoolRideCard({ ride, onRefresh, refreshKey = 0 }) {
   const [expanded, setExpanded] = useState(true);
@@ -38,14 +43,18 @@ export default function DriverCarpoolRideCard({ ride, onRefresh, refreshKey = 0 
     };
   }, [ride?._id, refreshKey]);
 
-  const bookedSeats = seatSnapshot?.bookedSeats ?? ride.bookedSeats ?? 0;
-  const pendingSeats = seatSnapshot?.pendingSeats ?? 0;
+  const bookedSeats =
+    seatSnapshot?.bookedSeats ?? ride.seatSummary?.bookedSeats ?? ride.bookedSeats ?? 0;
+  const pendingSeats = seatSnapshot?.pendingSeats ?? ride.seatSummary?.pendingSeats ?? 0;
   const totalSeats = seatSnapshot?.totalSeats ?? ride.totalSeats;
-  const availableSeats = seatSnapshot?.effectiveAvailable ?? ride.availableSeats;
+  const availableSeats =
+    seatSnapshot?.effectiveAvailable ??
+    ride.seatSummary?.effectiveAvailable ??
+    ride.availableSeats;
   const hasPassengers = bookedSeats > 0 || pendingSeats > 0;
 
   return (
-    <article className="glass-panel rounded-2xl border border-emerald-500/20 overflow-hidden">
+    <AnimatedCard as="article" layout className="glass-panel rounded-2xl border border-emerald-500/20 overflow-hidden" hover={false}>
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
@@ -101,7 +110,16 @@ export default function DriverCarpoolRideCard({ ride, onRefresh, refreshKey = 0 
         )}
       </button>
 
+      <AnimatePresence initial={false}>
       {expanded && (
+        <motion.div
+          key="expanded"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={fadeMedium}
+          className="overflow-hidden"
+        >
         <div className="px-4 sm:px-5 pb-5 space-y-4 border-t border-white/5 pt-4">
           <CarpoolLiveMap rideId={ride._id} className="h-[min(16rem,42vh)] min-h-[220px] w-full" />
 
@@ -118,9 +136,15 @@ export default function DriverCarpoolRideCard({ ride, onRefresh, refreshKey = 0 
             </div>
             <div className="rounded-lg bg-brand-500/5 border border-brand-500/20 p-2.5">
               <p className="text-[9px] uppercase text-white/50 font-bold flex items-center justify-center gap-0.5">
-                <Banknote className="h-3 w-3" /> / seat
+                <Banknote className="h-3 w-3" /> Route est.
               </p>
-              <p className="text-lg font-bold text-brand-300 mt-0.5">Rs. {ride.costPerSeat}</p>
+              <p className="text-lg font-bold text-brand-300 mt-0.5">
+                Rs.{' '}
+                {ride.pricing?.totalFuelCost
+                  ? Math.ceil(ride.pricing.totalFuelCost / Math.max(1, ride.totalSeats))
+                  : '—'}
+              </p>
+              <p className="text-[9px] text-white/45">avg / seat if full</p>
             </div>
             <div className="rounded-lg bg-brand-500/5 border border-brand-500/20 p-2.5">
               <p className="text-[9px] uppercase text-white/50 font-bold flex items-center justify-center gap-0.5">
@@ -131,10 +155,16 @@ export default function DriverCarpoolRideCard({ ride, onRefresh, refreshKey = 0 
               </p>
             </div>
             <div className="rounded-lg bg-brand-500/5 border border-brand-500/20 p-2.5">
-              <p className="text-[9px] uppercase text-white/50 font-bold">Fuel est.</p>
+              <p className="text-[9px] uppercase text-white/50 font-bold">Route fare est.</p>
               <p className="text-lg font-bold text-white mt-0.5">
                 Rs. {ride.pricing?.totalFuelCost ?? '—'}
               </p>
+              {ride.pricing?.platformRatePerKm > 0 && (
+                <p className="text-[9px] text-white/45 mt-0.5">
+                  {ride.pricing.platformRatePerKm} PKR/km
+                  {ride.amenities?.hasAC ? ' · AC' : ''}
+                </p>
+              )}
             </div>
           </div>
 
@@ -189,9 +219,13 @@ export default function DriverCarpoolRideCard({ ride, onRefresh, refreshKey = 0 
             </Link>
           )}
 
+          <StartRidePanel ride={ride} onStarted={onRefresh} onCancelled={onRefresh} />
+
           <CompleteRidePanel ride={ride} onCompleted={onRefresh} />
         </div>
+        </motion.div>
       )}
-    </article>
+      </AnimatePresence>
+    </AnimatedCard>
   );
 }

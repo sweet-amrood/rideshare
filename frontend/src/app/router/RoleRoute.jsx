@@ -5,7 +5,9 @@ import { hasAnyRole, normalizeRoles } from '@/utils/roles';
 /**
  * Restricts a route to users with at least one of `allow` roles.
  */
-export default function RoleRoute({ allow, redirectTo = '/dashboard', children }) {
+import { paths } from '@/app/router/paths';
+
+export default function RoleRoute({ allow, redirectTo = paths.dashboard, children }) {
   const { user } = useAuth();
   const location = useLocation();
   const roles = normalizeRoles(user?.roles);

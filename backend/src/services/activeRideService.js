@@ -288,7 +288,7 @@ const startRide = async (requestId, driverId) => {
   emitRideRequestEvent(String(request.passengerId), 'ride-request:started', payload);
   emitRideRequestEvent(String(request.acceptedDriverId), 'ride-request:started', payload);
 
-  await notifyInApp(request.passengerId, 'RIDE_REQUEST_MATCHED', request, {
+  await notifyInApp(request.passengerId, 'RIDE_REQUEST_STARTED', request, {
     title: 'Ride started',
     body: 'Your trip is in progress. Track the driver on the map.',
     data: { requestId: request._id }
@@ -331,6 +331,23 @@ const completeRide = async (requestId, userId) => {
     emitRideRequestEvent(String(request.acceptedDriverId), 'ride-request:completed', {
       ...base,
       request: formatSession(request, request.acceptedDriverId)
+    });
+  }
+
+  const completeBody =
+    role === 'DRIVER'
+      ? 'Driver ended the ride. Confirm on your side to finish.'
+      : 'Passenger confirmed the ride is complete.';
+  await notifyInApp(request.passengerId, 'RIDE_REQUEST_COMPLETED', request, {
+    title: 'Ride completed',
+    body: completeBody,
+    data: { requestId: request._id }
+  });
+  if (request.acceptedDriverId) {
+    await notifyInApp(request.acceptedDriverId, 'RIDE_REQUEST_COMPLETED', request, {
+      title: 'Ride completed',
+      body: completeBody,
+      data: { requestId: request._id }
     });
   }
 
@@ -400,6 +417,18 @@ const cancelRide = async (requestId, userId, { reason } = {}) => {
   if (wasActiveSearch) {
     const { notifyDriversRequestCancelled } = require('./rideRequestService');
     notifyDriversRequestCancelled(request);
+  }
+
+  const cancelBody = isPassenger
+    ? 'The passenger cancelled this ride request.'
+    : 'The driver cancelled this ride.';
+  const otherId = isPassenger ? request.acceptedDriverId : request.passengerId;
+  if (otherId) {
+    await notifyInApp(otherId, 'RIDE_REQUEST_CANCELLED', request, {
+      title: 'Ride cancelled',
+      body: cancelBody,
+      data: { requestId: request._id }
+    });
   }
 
   return { requestId: request._id, status: request.status };

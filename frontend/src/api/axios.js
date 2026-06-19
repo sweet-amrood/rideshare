@@ -2,6 +2,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { env } from '@/config/env';
 import { getDemoApiResponse, isDemoActive } from '@/config/demo';
+import { paths } from '@/app/router/paths';
 
 const UPLOAD_PATHS = [
   '/documents/upload',
@@ -57,16 +58,14 @@ api.interceptors.response.use(
 
     if (status === 401 && !isAuthRoute && !env.demoMode && !isDemoActive()) {
       localStorage.removeItem('token');
-      if (!window.location.pathname.startsWith('/login')) {
+      if (!window.location.pathname.startsWith(paths.login)) {
         toast.error('Session expired. Please sign in again.');
-        window.location.href = '/login';
+        window.location.href = paths.login;
       }
     } else if (status === 429) {
-      // Rate limit — avoid spamming toasts on login/public pages
-      const isPublicPage =
-        /^\/(login|register|verify-email|forgot-password|reset-password)/.test(
-          window.location.pathname
-        );
+      const isPublicPage = /^\/app\/(login|register|verify-email|forgot-password|reset-password)/.test(
+        window.location.pathname
+      );
       if (!isPublicPage) {
         toast.error(message);
       }

@@ -5,6 +5,8 @@
 @layer base {
   body {
     font-family: 'Outfit', 'Inter', sans-serif;
+    background-color: #080c14;
+    color: #f8fafc;
   }
 
   nav a,
@@ -29,7 +31,6 @@
     font-family: inherit;
   }
 
-  /* Onboarding / auth choice cards — no default grey button fill */
   .choice-btn,
   .modal-option-btn {
     background-color: transparent;
@@ -48,7 +49,6 @@
     box-shadow: 0 0 0 2px rgba(79, 94, 244, 0.55);
   }
 
-  /* Vehicle picker — no list bullets (Windows/legacy) */
   [role='radiogroup'][aria-label='Vehicle'],
   [role='radiogroup'][aria-label='Vehicle'] li {
     list-style: none !important;
@@ -56,76 +56,296 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center w-auto max-w-full px-5 py-2 min-h-[36px] bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg text-sm transition-colors cursor-pointer outline-none shadow-md shadow-brand-500/15 border-2 border-brand-400 hover:border-brand-300;
+    @apply inline-flex items-center justify-center gap-2 w-auto max-w-full px-5 py-2 min-h-[36px]
+      font-semibold rounded-xl text-sm transition-all cursor-pointer outline-none
+      text-white border-0;
+    background: linear-gradient(135deg, #4f5ef4 0%, #7c3aed 100%);
+    background-size: 200% auto;
+    box-shadow: 0 4px 20px -4px rgba(79, 94, 244, 0.3);
   }
-
-  .btn-outline {
-    @apply bg-transparent text-white/75 font-medium rounded-lg text-sm transition-all cursor-pointer outline-none border-2 border-slateCustom-500 hover:border-brand-500 hover:text-brand-100 hover:bg-brand-500/10;
+  .btn-primary:hover {
+    background-position: right center;
+    box-shadow: 0 8px 30px -6px rgba(79, 94, 244, 0.5);
+    transform: translateY(-1px);
   }
-
+  .btn-primary:active {
+    transform: translateY(0);
+  }
   .btn-primary:focus,
   .btn-primary:focus-visible {
     outline: none !important;
-    box-shadow: 0 10px 25px -10px rgba(79, 94, 244, 0.35) !important;
+  }
+
+  .btn-outline {
+    @apply bg-transparent text-white/80 font-semibold rounded-xl text-sm transition-all cursor-pointer outline-none;
+    border: 1.5px solid rgba(79, 94, 244, 0.35);
+  }
+  .btn-outline:hover {
+    border-color: rgba(79, 94, 244, 0.7);
+    color: #a3b5fc;
+    background: rgba(79, 94, 244, 0.08);
   }
 }
 
-/* Custom Premium UI Utilities */
+/* ─────────────────────────────────────────
+   GLASS PANELS
+───────────────────────────────────────── */
 .glass-panel {
-  background: rgba(22, 29, 48, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .glass-panel-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glass-panel-hover:hover {
-  background: rgba(22, 29, 48, 0.85);
-  border-color: rgba(79, 94, 244, 0.3);
-  box-shadow: 0 10px 30px -10px rgba(79, 94, 244, 0.2);
+  background: rgba(17, 24, 39, 0.9);
+  border-color: rgba(79, 94, 244, 0.35);
+  box-shadow: 0 12px 40px -10px rgba(79, 94, 244, 0.25);
   transform: translateY(-2px);
 }
 
-/* Premium Custom Scrollbars */
+/* Glowing card variant */
+.glass-card {
+  background: linear-gradient(145deg, rgba(17, 24, 39, 0.85) 0%, rgba(26, 35, 56, 0.7) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card:hover {
+  border-color: rgba(79, 94, 244, 0.4);
+  box-shadow:
+    0 16px 48px -12px rgba(79, 94, 244, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-3px);
+}
+
+/* ─────────────────────────────────────────
+   GRADIENT TEXT
+───────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #4f5ef4 0%, #a78bfa 50%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-brand {
+  background: linear-gradient(135deg, #798df9 0%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-emerald {
+  background: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ─────────────────────────────────────────
+   GLOW EFFECTS
+───────────────────────────────────────── */
+.glow-brand {
+  box-shadow: 0 0 30px rgba(79, 94, 244, 0.35);
+}
+.glow-brand-lg {
+  box-shadow: 0 0 60px rgba(79, 94, 244, 0.2), 0 0 120px rgba(79, 94, 244, 0.1);
+}
+.glow-cyan {
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+}
+.glow-emerald {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+}
+
+/* Neon border */
+.neon-border {
+  border: 1px solid rgba(79, 94, 244, 0.5);
+  box-shadow:
+    0 0 8px rgba(79, 94, 244, 0.3),
+    inset 0 0 8px rgba(79, 94, 244, 0.05);
+}
+.neon-border-cyan {
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  box-shadow:
+    0 0 8px rgba(6, 182, 212, 0.3),
+    inset 0 0 8px rgba(6, 182, 212, 0.05);
+}
+
+/* ─────────────────────────────────────────
+   GRADIENT BACKGROUNDS
+───────────────────────────────────────── */
+.bg-gradient-hero {
+  background: linear-gradient(135deg, rgba(79, 94, 244, 0.15) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(6, 182, 212, 0.05) 100%);
+}
+
+.bg-gradient-card-brand {
+  background: linear-gradient(135deg, rgba(79, 94, 244, 0.12) 0%, rgba(139, 92, 246, 0.06) 100%);
+}
+.bg-gradient-card-emerald {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.06) 100%);
+}
+.bg-gradient-card-amber {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(249, 115, 22, 0.06) 100%);
+}
+.bg-gradient-card-rose {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(168, 85, 247, 0.06) 100%);
+}
+
+/* ─────────────────────────────────────────
+   SHIMMER / SKELETON
+───────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ─────────────────────────────────────────
+   GRID / DOT BACKGROUNDS
+───────────────────────────────────────── */
+.bg-grid {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
+.bg-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ─────────────────────────────────────────
+   SCROLLBARS
+───────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0f19;
+  background: #080c14;
 }
 ::-webkit-scrollbar-thumb {
-  background: #212a44;
-  border-radius: 4px;
+  background: #1a2338;
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #4f5ef4;
 }
 
-/* Grid Background Micro-pattern */
-.bg-grid {
-  background-size: 30px 30px;
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+/* ─────────────────────────────────────────
+   ANIMATED ORBS (decorative)
+───────────────────────────────────────── */
+.orb {
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  position: absolute;
+}
+.orb-brand {
+  background: radial-gradient(circle, rgba(79, 94, 244, 0.4) 0%, transparent 70%);
+}
+.orb-violet {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, transparent 70%);
+}
+.orb-cyan {
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
 }
 
-/* Leaflet map */
+/* ─────────────────────────────────────────
+   STATUS BADGES
+───────────────────────────────────────── */
+.badge {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider;
+}
+.badge-brand {
+  @apply badge;
+  background: rgba(79, 94, 244, 0.15);
+  color: #a3b5fc;
+  border: 1px solid rgba(79, 94, 244, 0.25);
+}
+.badge-emerald {
+  @apply badge;
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.badge-amber {
+  @apply badge;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.badge-red {
+  @apply badge;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ─────────────────────────────────────────
+   SIDEBAR NAV ACTIVE INDICATOR
+───────────────────────────────────────── */
+.nav-item-active {
+  background: linear-gradient(135deg, rgba(79, 94, 244, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 1px solid rgba(79, 94, 244, 0.35);
+  box-shadow: 0 4px 16px -4px rgba(79, 94, 244, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.nav-item-active-driver {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 16px -4px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* ─────────────────────────────────────────
+   LEAFLET MAP
+───────────────────────────────────────── */
 .leaflet-container {
   font-family: 'Outfit', 'Inter', system-ui, sans-serif;
-  background: #0b0f19;
+  background: #080c14;
 }
-
 .user-location-marker {
   background: transparent !important;
   border: none !important;
 }
 
-/* Review modal — no grey native select/options (Windows) */
+/* ─────────────────────────────────────────
+   REVIEW / FORM FIXES
+───────────────────────────────────────── */
 .review-modal-select,
 .review-modal-select option {
-  background-color: #061210;
+  background-color: #111827;
   color: #fff;
+}
+
+/* ─────────────────────────────────────────
+   DIVIDERS
+───────────────────────────────────────── */
+.divider-brand {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(79, 94, 244, 0.4), transparent);
+}
+
+/* ─────────────────────────────────────────
+   PAGE SECTION HEADINGS
+───────────────────────────────────────── */
+.section-label {
+  @apply text-[10px] font-bold uppercase tracking-[0.2em];
+  color: rgba(163, 181, 252, 0.7);
 }

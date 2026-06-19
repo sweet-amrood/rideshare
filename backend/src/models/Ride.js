@@ -58,13 +58,32 @@ const RideSchema = new mongoose.Schema({
   pricing: {
     totalFuelCost: { type: Number, default: 0 },
     distanceKm: { type: Number, default: 0 },
+    platformRatePerKm: { type: Number, default: 0 },
+    fuelRatePerKm: { type: Number, default: 0 },
+    acPremiumApplied: { type: Boolean, default: false },
     currency: { type: String, default: 'PKR' },
     splitAmong: { type: Number, default: 0 }
+  },
+  /** Dynamic carpool route — ordered passenger stops between origin and destination */
+  route: {
+    waypoints: [
+      {
+        type: { type: String, enum: ['pickup', 'dropoff'], required: true },
+        bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
+        passengerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        address: { type: String, default: '' },
+        location: { type: PointSchema, required: true }
+      }
+    ],
+    currentTotalDistanceKm: { type: Number, default: 0 },
+    lastOptimizedAt: { type: Date, default: null }
   },
   restrictions: {
     womenOnly: { type: Boolean, default: false },
     universityOnly: { type: Boolean, default: false },
-    officeOnly: { type: Boolean, default: false }
+    officeOnly: { type: Boolean, default: false },
+    /** Max km passenger pickup/destination may deviate from driver's route ends (each side). */
+    sideDetourKm: { type: Number, default: 3, min: 1, max: 15 }
   },
   amenities: {
     luggageAllowed: {
@@ -82,6 +101,12 @@ const RideSchema = new mongoose.Schema({
   departureDate: { type: Date, required: true, index: true },
   allowedCommunities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Community' }],
   notes: { type: String, maxlength: 300, default: '' },
+  startedAt: { type: Date, default: null },
+  currentPickupBookingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking',
+    default: null
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -9,6 +9,7 @@ import AuthShell from '@/features/auth/components/AuthShell';
 import AuthSubmitButton from '@/features/auth/components/AuthSubmitButton';
 import OtpInput from '@/features/auth/components/OtpInput';
 import { validateOtp, hasErrors, runValidators } from '@/features/auth/utils/validation';
+import { paths } from '@/app/router/paths';
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function VerifyEmailPage() {
     clearError();
 
     if (!email) {
-      navigate('/register');
+      navigate(paths.register);
       return;
     }
 
@@ -47,7 +48,7 @@ export default function VerifyEmailPage() {
 
     if (res.success) {
       toast.success('Email verified! Welcome to Ride Share.');
-      navigate('/onboarding', { replace: true });
+      navigate(paths.onboarding, { replace: true });
     } else {
       toast.error(res.error || error);
     }
@@ -79,7 +80,7 @@ export default function VerifyEmailPage() {
         )
       }
       footer={
-        <Link to="/login" className="text-sm font-semibold text-brand-400 hover:text-brand-300">
+        <Link to={paths.login} className="text-sm font-semibold text-brand-400 hover:text-brand-300">
           Back to sign in
         </Link>
       }

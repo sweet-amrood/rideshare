@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { History, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { bookingService } from '@/api/services/booking.service';
@@ -6,6 +7,10 @@ import { rideRequestService } from '@/api/services/rideRequest.service';
 import { HISTORY_FILTERS } from '../constants';
 import BookingCard from '../components/BookingCard';
 import RideRequestHistoryCard from '../components/RideRequestHistoryCard';
+import { StaggerList, StaggerItem } from '@/components/animations/StaggerList';
+import EmptyState from '@/components/animations/EmptyState';
+import { SkeletonCard } from '@/components/animations/Skeleton';
+import { springGentle } from '@/animations/motionConfig';
 
 export default function BookingHistoryPage() {
   const [items, setItems] = useState([]);
@@ -61,13 +66,20 @@ export default function BookingHistoryPage() {
             key={f.value}
             type="button"
             onClick={() => setStatusFilter(f.value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+            className={`relative px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
               statusFilter === f.value
                 ? 'bg-brand-500 text-white border-brand-500'
                 : 'border-slateCustom-600 text-white/70 hover:border-brand-500/40'
             }`}
           >
             {f.label}
+            {statusFilter === f.value && (
+              <motion.div
+                layoutId="history-filter-pill"
+                className="absolute inset-0 rounded-full bg-brand-500 border border-brand-500 -z-10"
+                transition={springGentle}
+              />
+            )}
           </button>
         ))}
       </div>
@@ -75,13 +87,16 @@ export default function BookingHistoryPage() {
       <p className="text-xs text-white/50">{total} booking(s)</p>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-400" />
+        <div className="space-y-4">
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
       ) : items.length === 0 && rideRequests.length === 0 ? (
-        <div className="glass-panel p-10 rounded-2xl text-center text-white/70">
-          No trips match this filter.
-        </div>
+        <EmptyState
+          icon={History}
+          title="No trips match this filter"
+          description="Try a different status filter or book a new ride."
+        />
       ) : (
         <div className="space-y-6">
           {rideRequests.length > 0 && (
@@ -89,9 +104,15 @@ export default function BookingHistoryPage() {
               <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wide">
                 On-demand rides
               </h2>
-              {rideRequests.map((r) => (
-                <RideRequestHistoryCard key={r._id} ride={r} />
-              ))}
+              <StaggerList>
+                <AnimatePresence mode="popLayout">
+                {rideRequests.map((r) => (
+                  <StaggerItem key={r._id} layout>
+                    <RideRequestHistoryCard ride={r} />
+                  </StaggerItem>
+                ))}
+                </AnimatePresence>
+              </StaggerList>
             </section>
           )}
           {items.length > 0 && (
@@ -99,9 +120,15 @@ export default function BookingHistoryPage() {
               <h2 className="text-sm font-bold text-brand-400 uppercase tracking-wide">
                 Carpool bookings
               </h2>
-              {items.map((b) => (
-                <BookingCard key={b._id} booking={b} onRefresh={load} />
-              ))}
+              <StaggerList>
+                <AnimatePresence mode="popLayout">
+                {items.map((b) => (
+                  <StaggerItem key={b._id} layout>
+                    <BookingCard booking={b} onRefresh={load} />
+                  </StaggerItem>
+                ))}
+                </AnimatePresence>
+              </StaggerList>
             </section>
           )}
         </div>

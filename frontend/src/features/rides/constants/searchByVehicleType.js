@@ -42,3 +42,9 @@ export const SEARCH_PREFS_BY_TYPE = {
 export function getVehicleTypeLabel(type) {
   return RIDE_TYPE_OPTIONS.find((o) => o.id === type)?.label || type || 'Ride';
 }
+
+/** Resolve vehicle type when vehicleId may be an unpopulated ObjectId string. */
+export function getRideVehicleType(ride) {
+  if (!ride) return null;
+  return ride.vehicleId?.vehicleType ?? ride.vehicleType ?? null;
+}

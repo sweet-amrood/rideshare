@@ -27,6 +27,7 @@ const updateFareSettings = async (payload) => {
     'searchWaveRadiiMeters',
     'driverNotifyRadiusMeters',
     'avgSpeedKmh',
+    'acPremiumMultiplier',
     'currency'
   ];
   topLevel.forEach((k) => {

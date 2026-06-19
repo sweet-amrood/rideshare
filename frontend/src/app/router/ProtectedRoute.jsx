@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { paths } from './paths';
 
 export default function ProtectedRoute() {
   const { token, user, loading, isInitialized } = useAuth();
@@ -11,7 +12,7 @@ export default function ProtectedRoute() {
   }
 
   if (!token || !user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to={paths.login} state={{ from: location }} replace />;
   }
 
   return <Outlet />;

@@ -16,6 +16,7 @@ const adminRoutes = require('./admin/routes/adminRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const rideRequestRoutes = require('./routes/rideRequestRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/documents', documentRoutes);
 app.use('/api/v1/ride-requests', rideRequestRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Centralized Route Interceptors
 app.use(notFound);

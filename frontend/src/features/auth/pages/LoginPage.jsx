@@ -11,6 +11,7 @@ import GoogleSignIn from '@/features/auth/components/GoogleSignIn';
 import { validateEmail, validatePassword, runValidators, hasErrors } from '@/features/auth/utils/validation';
 import { env } from '@/config/env';
 import { DEMO_EMAIL, DEMO_PASSWORD, isDemoActive } from '@/config/demo';
+import { paths } from '@/app/router/paths';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -25,11 +26,11 @@ export default function LoginPage() {
   const redirectAfterAuth = (user, { requiresProfileCompletion } = {}) => {
     const from = location.state?.from?.pathname;
     if (requiresProfileCompletion || user?.profileCompleted === false || user?.requiresProfileCompletion) {
-      navigate('/complete-profile', { replace: true });
+      navigate(paths.completeProfile, { replace: true });
       return;
     }
     const needsOnboarding = user?.onboardingComplete === false;
-    navigate(needsOnboarding ? '/onboarding' : from || '/dashboard', { replace: true });
+    navigate(needsOnboarding ? paths.onboarding : from || paths.dashboard, { replace: true });
   };
 
   const handleSubmit = async (e) => {
@@ -51,7 +52,7 @@ export default function LoginPage() {
       redirectAfterAuth(res.user);
     } else if (res.requiresEmailVerification) {
       toast('Verify your email to continue', { icon: '✉️' });
-      navigate('/verify-email', { state: { email: res.email || email } });
+      navigate(paths.verifyEmail, { state: { email: res.email || email } });
     } else if (res.error) {
       toast.error(res.error);
     }
@@ -93,7 +94,7 @@ export default function LoginPage() {
       footer={
         <p className="text-xs text-slate-400">
           New here?{' '}
-          <Link to="/register" className="font-semibold text-brand-400 hover:text-brand-300 no-underline">
+          <Link to={paths.register} className="font-semibold text-brand-400 hover:text-brand-300 no-underline">
             Create an account
           </Link>
         </p>
@@ -114,7 +115,7 @@ export default function LoginPage() {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-2" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
         <AuthTextField
           label="Email address"
           type="email"
@@ -131,17 +132,22 @@ export default function LoginPage() {
           error={fieldErrors.password}
         />
 
-        <div className="text-right -mt-0.5">
-          <Link to="/forgot-password" className="text-xs font-semibold text-brand-400 hover:text-brand-300 no-underline">
+        <div className="flex justify-end pt-0.5">
+          <Link
+            to={paths.forgotPassword}
+            className="text-xs font-semibold text-brand-400 hover:text-brand-300 no-underline"
+          >
             Forgot password?
           </Link>
         </div>
 
-        <AuthSubmitButton loading={submitting}>Sign in</AuthSubmitButton>
+        <div className="pt-1">
+          <AuthSubmitButton loading={submitting}>Sign in</AuthSubmitButton>
+        </div>
       </form>
 
       {showDemoPanel && (
-        <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3">
+        <div className="space-y-2.5 rounded-xl border border-amber-500/25 bg-amber-500/10 p-3.5">
           <p className="text-xs font-semibold text-amber-100">Portfolio demo (no backend)</p>
           <p className="text-[11px] leading-relaxed text-amber-100/80">
             Email: <span className="font-mono">{DEMO_EMAIL}</span>

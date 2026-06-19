@@ -3,6 +3,7 @@ import { Car, Bike, CircleDot, Loader2, X } from 'lucide-react';
 import { profileService } from '@/api/services/profile.service';
 import { useAuth } from '@/hooks/useAuth';
 import { getVehicleTypeLabel } from '@/features/rides/constants/searchByVehicleType';
+import AnimatedModal from '@/components/animations/AnimatedModal';
 
 const TYPE_ICON = { CAR: Car, BIKE: Bike, RICKSHAW: CircleDot };
 
@@ -32,8 +33,6 @@ export default function DriverActiveVehicleModal({ open, vehicles: vehiclesProp 
     }
   }, [open, vehicles.length]);
 
-  if (!open) return null;
-
   const confirm = async () => {
     if (!selected) return;
     setSaving(true);
@@ -50,14 +49,12 @@ export default function DriverActiveVehicleModal({ open, vehicles: vehiclesProp 
   const showList = vehicles.length >= 2;
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slateCustom-900/90 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="active-vehicle-title"
-    >
+    <AnimatedModal open={open} onClose={onDone} zIndex={60}>
       <div
         className="glass-panel relative w-full max-w-[320px] rounded-2xl shadow-2xl overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="active-vehicle-title"
       >
         <div className="flex items-start justify-between gap-2 px-4 pt-4 pb-2 border-b border-slateCustom-700/50">
           <div>
@@ -157,6 +154,6 @@ export default function DriverActiveVehicleModal({ open, vehicles: vehiclesProp 
           </button>
         </div>
       </div>
-    </div>
+    </AnimatedModal>
   );
 }

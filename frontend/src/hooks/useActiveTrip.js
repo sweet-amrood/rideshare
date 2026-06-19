@@ -15,14 +15,14 @@ export function useActiveTrip({ asDriver = false, pollMs = 15000 } = {}) {
   const [commitment, setCommitment] = useState(null);
   const [onDemand, setOnDemand] = useState(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async ({ silent = false } = {}) => {
     if (!user?._id) {
       setCommitment(null);
       setOnDemand(null);
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       if (asDriver) {
         const res = await rideRequestService.getCurrent();
@@ -67,17 +67,20 @@ export function useActiveTrip({ asDriver = false, pollMs = 15000 } = {}) {
     !asDriver
       ? {
           'carpool-ride-completed': () => {
-            refresh();
+            refresh({ silent: true });
           },
-          'booking-confirmed': () => refresh(),
-          'booking-rejected': () => refresh()
+          'carpool-ride-started': () => {
+            refresh({ silent: true });
+          },
+          'booking-confirmed': () => refresh({ silent: true }),
+          'booking-rejected': () => refresh({ silent: true })
         }
       : {}
   );
 
   useEffect(() => {
     if (asDriver || !pollMs) return undefined;
-    const id = setInterval(refresh, pollMs);
+    const id = setInterval(() => refresh({ silent: true }), pollMs);
     return () => clearInterval(id);
   }, [asDriver, pollMs, refresh]);
 
@@ -87,7 +90,8 @@ export function useActiveTrip({ asDriver = false, pollMs = 15000 } = {}) {
     ((commitment.kind === 'CARPOOL_BOOKING' &&
       ![BOOKING_STATUS.COMPLETED, BOOKING_STATUS.CANCELLED, BOOKING_STATUS.REJECTED].includes(
         commitment.data?.status
-      )) ||
+      ) &&
+      commitment.data?.rideId?.status !== 'COMPLETED') ||
       (commitment.kind === 'RIDE_REQUEST' &&
         ['SEARCHING', 'OFFERS_PENDING', 'ACCEPTED', 'IN_PROGRESS'].includes(
           commitment.data?.status

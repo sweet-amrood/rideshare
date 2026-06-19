@@ -18,7 +18,12 @@ import {
   resolveCurrentLocationAsPoint,
   geolocationErrorMessage
 } from '@/components/map/geolocation';
+import { AnimatePresence } from 'framer-motion';
+import AnimatedCard from '@/components/animations/AnimatedCard';
+import { StaggerList, StaggerItem } from '@/components/animations/StaggerList';
+import { SkeletonGrid } from '@/components/animations/Skeleton';
 import AppButton from '@/components/common/AppButton';
+import { paths } from '@/app/router/paths';
 import RideTags from '@/features/rides/components/RideTags';
 import SeatBookingModal from '@/features/bookings/components/SeatBookingModal';
 import LiveSeatTracker from '@/features/bookings/components/LiveSeatTracker';
@@ -29,7 +34,7 @@ import CarpoolRideRoutePreview from '@/components/map/CarpoolRideRoutePreview';
 import { bookingService } from '@/api/services/booking.service';
 import { useActiveTrip } from '@/hooks/useActiveTrip';
 import { BOOKING_VEHICLE_TYPE } from '@/features/bookings/constants';
-import { getVehicleTypeLabel } from '@/features/rides/constants/searchByVehicleType';
+import { getVehicleTypeLabel, getRideVehicleType } from '@/features/rides/constants/searchByVehicleType';
 
 export default function CarpoolSearchPanel() {
   const location = useLocation();
@@ -59,7 +64,7 @@ export default function CarpoolSearchPanel() {
             id: ride._id,
             lat: c[1],
             lng: c[0],
-            title: `${ride.driverId?.name || 'Driver'} · Rs.${ride.costPerSeat}/seat`,
+            title: `${ride.driverId?.name || 'Driver'}${fareByRide[ride._id]?.costPerSeatNow || ride.farePreview?.costPerSeatNow ? ` · Rs.${fareByRide[ride._id]?.costPerSeatNow || ride.farePreview?.costPerSeatNow}/seat` : ''}`,
             iconHtml:
               '<div class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 border-2 border-white shadow text-xs">🚗</div>',
             iconSize: [28, 28],
@@ -81,7 +86,21 @@ export default function CarpoolSearchPanel() {
     Promise.all(
       rides.map(async (ride) => {
         try {
-          const res = await bookingService.getFareQuote(ride._id, { seatsBooked: 1 });
+          const payload = {
+            seatsBooked: seatsNeeded,
+            ...(pickup?.lng != null &&
+            pickup?.lat != null &&
+            destination?.lng != null &&
+            destination?.lat != null
+              ? {
+                  pickupAddress: pickup.address || pickup.name || 'Selected pickup',
+                  pickupCoords: [Number(pickup.lng), Number(pickup.lat)],
+                  dropoffAddress: destination.address || destination.name || 'Selected destination',
+                  dropoffCoords: [Number(destination.lng), Number(destination.lat)]
+                }
+              : {})
+          };
+          const res = await bookingService.getFareQuote(ride._id, payload);
           return [ride._id, res.data];
         } catch {
           return [ride._id, null];
@@ -94,7 +113,7 @@ export default function CarpoolSearchPanel() {
     return () => {
       cancelled = true;
     };
-  }, [rides]);
+  }, [rides, pickup, destination, seatsNeeded]);
 
   useEffect(() => {
     if (location.state?.pickup) setPickup(location.state.pickup);
@@ -137,6 +156,8 @@ export default function CarpoolSearchPanel() {
         originLat: pickup.lat,
         destLng: destination.lng,
         destLat: destination.lat,
+        pickupAddress: pickup.address || pickup.name || '',
+        dropoffAddress: destination.address || destination.name || '',
         departureDate: depDate || undefined,
         vehicleType: 'CAR',
         seatsNeeded: Math.min(4, Math.max(1, seatsNeeded)),
@@ -164,18 +185,25 @@ export default function CarpoolSearchPanel() {
       ? 'Tap the map or My location for pickup, then set destination.'
       : 'Tap the map to set destination.';
 
-  if (tripLoading) {
-    return (
-      <div className="glass-panel rounded-2xl p-12 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-400" />
-      </div>
-    );
+  if (tripLoading && !commitment) {
+    return <SkeletonGrid count={2} />;
   }
 
   if (commitment?.kind === 'CARPOOL_BOOKING') {
-    return (
-      <ActiveCarpoolSession booking={commitment.data} onDismiss={refreshTrip} />
-    );
+    const dismissed =
+      typeof window !== 'undefined' &&
+      sessionStorage.getItem(`carpool-dismissed-${commitment.data._id}`);
+    if (!dismissed) {
+      return (
+        <ActiveCarpoolSession
+          booking={commitment.data}
+          onDismiss={() => {
+            sessionStorage.setItem(`carpool-dismissed-${commitment.data._id}`, '1');
+            refreshTrip({ silent: true });
+          }}
+        />
+      );
+    }
   }
 
   if (
@@ -195,7 +223,7 @@ export default function CarpoolSearchPanel() {
           Finish or cancel your Book Ride trip before requesting a carpool seat.
         </p>
         <Link
-          to="/find"
+          to={paths.find}
           className="inline-flex text-sm font-semibold text-brand-400 no-underline hover:text-brand-300"
         >
           Go to Book Ride →
@@ -325,26 +353,46 @@ export default function CarpoolSearchPanel() {
       </div>
 
       {rides.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {rides.map((ride) => (
-            <article
-              key={ride._id}
-              className="glass-panel p-5 rounded-2xl flex flex-col gap-4 border border-transparent hover:border-brand-500/40 transition-colors"
+        <StaggerList className="grid grid-cols-1 md:grid-cols-2 gap-4" layout>
+          <AnimatePresence mode="popLayout">
+          {rides.map((ride) => {
+            const quote = fareByRide[ride._id] || ride.farePreview;
+            const seatsFree =
+              ride.seatSummary?.effectiveAvailable ?? ride.availableSeats ?? 0;
+            const vehicleType = getRideVehicleType(ride);
+            const isCarRide = vehicleType === BOOKING_VEHICLE_TYPE;
+            const routeRejected = quote?.accepted === false;
+            const canRequest =
+              isCarRide && !routeRejected && seatsFree >= 1 && seatsFree >= seatsNeeded;
+            return (
+            <StaggerItem key={ride._id} layout>
+            <AnimatedCard
+              as="article"
+              layout
+              className="glass-panel p-5 rounded-2xl flex flex-col gap-4 border border-transparent hover:border-brand-500/40"
             >
               <div className="flex justify-between items-start gap-2">
                 <div>
                   <p className="font-bold text-white text-sm">{ride.driverId?.name}</p>
                   <p className="text-[11px] text-white/60">
-                    {getVehicleTypeLabel(ride.vehicleId?.vehicleType)}
+                    {getVehicleTypeLabel(vehicleType)}
                   </p>
                 </div>
                 <span className="text-sm font-bold text-brand-300">
-                  Rs. {fareByRide[ride._id]?.costPerSeatNow ?? ride.costPerSeat}
-                  <span className="text-[10px] font-normal text-white/50 block">per seat now</span>
+                  {quote?.accepted === false ? (
+                    <span className="text-[10px] font-normal text-amber-300">Route not compatible</span>
+                  ) : quote?.farePerSeat != null || quote?.costPerSeatNow != null ? (
+                    <>
+                      Rs. {quote.farePerSeat ?? quote.costPerSeatNow}
+                      <span className="text-[10px] font-normal text-white/50 block">per seat now</span>
+                    </>
+                  ) : (
+                    <span className="text-[10px] font-normal text-white/50">Fare calculating…</span>
+                  )}
                 </span>
               </div>
 
-              <CarpoolFareBreakdown quote={fareByRide[ride._id]} compact />
+              <CarpoolFareBreakdown quote={quote} compact />
 
               <CarpoolRideRoutePreview ride={ride} className="h-28 w-full" />
 
@@ -371,13 +419,25 @@ export default function CarpoolSearchPanel() {
                 </li>
                 <li className="flex gap-2">
                   <Users className="h-3.5 w-3.5 shrink-0" />
-                  {ride.availableSeats} of {ride.totalSeats} seats left
+                  {ride.seatSummary?.effectiveAvailable ?? ride.availableSeats} of {ride.totalSeats}{' '}
+                  seats available
+                  {(ride.seatSummary?.pendingSeats ?? ride.pendingSeats) > 0 && (
+                    <span className="text-amber-400/90">
+                      ({ride.seatSummary?.pendingSeats ?? ride.pendingSeats} pending)
+                    </span>
+                  )}
                 </li>
               </ul>
 
               <RideTags ride={ride} />
 
-              {ride.vehicleId?.vehicleType === BOOKING_VEHICLE_TYPE && (
+              {routeRejected && (
+                <p className="text-xs text-amber-300/95 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
+                  {quote.rejectionReason || 'Your trip adds too much detour for this ride.'}
+                </p>
+              )}
+
+              {isCarRide && (
                 <LiveSeatTracker rideId={ride._id} compact />
               )}
 
@@ -394,27 +454,37 @@ export default function CarpoolSearchPanel() {
                   type="button"
                   fullWidth={false}
                   className="flex-[2]"
-                  disabled={
-                    ride.vehicleId?.vehicleType !== BOOKING_VEHICLE_TYPE || ride.availableSeats < 1
-                  }
+                  disabled={!canRequest}
                   onClick={() => setSelectedRide(ride)}
                 >
-                  {ride.vehicleId?.vehicleType === BOOKING_VEHICLE_TYPE
-                    ? 'Request seat'
-                    : 'Car only'}
+                  {!isCarRide
+                    ? 'Car only'
+                    : routeRejected
+                      ? 'Route not compatible'
+                      : seatsFree < seatsNeeded
+                        ? `Need ${seatsNeeded} seats`
+                        : seatsFree < 1
+                          ? 'No seats'
+                          : 'Request seat'}
                 </AppButton>
               </div>
-            </article>
-          ))}
-        </div>
+            </AnimatedCard>
+            </StaggerItem>
+            );
+          })}
+          </AnimatePresence>
+        </StaggerList>
       )}
 
       {selectedRide && (
         <SeatBookingModal
           ride={selectedRide}
+          passengerPickup={pickup}
+          passengerDestination={destination}
           onClose={() => setSelectedRide(null)}
           onSuccess={() => {
             refreshTrip();
+            if (pickup?.lat && destination?.lat) executeSearch();
           }}
         />
       )}

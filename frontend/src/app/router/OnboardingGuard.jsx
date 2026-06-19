@@ -2,24 +2,20 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { needsDriverSetup } from '@/utils/commuterRole';
 import { isDriver } from '@/utils/roles';
+import { paths } from './paths';
 
-/** Paths that require completed driver setup before access */
-const DRIVER_SETUP_PATHS = ['/offer', '/driver'];
+const DRIVER_SETUP_PATHS = [paths.offer, paths.app + '/driver'];
 
-/**
- * Ensures commuter onboarding is done. Driver document setup is only required
- * for driver-specific routes — users can stay in passenger mode without finishing it.
- */
 export default function OnboardingGuard() {
   const { onboardingComplete, user } = useAuth();
   const location = useLocation();
   const path = location.pathname;
 
-  const onOnboarding = path.startsWith('/onboarding');
-  const onCompleteProfile = path === '/complete-profile';
+  const onOnboarding = path.startsWith(paths.onboarding);
+  const onCompleteProfile = path === paths.completeProfile;
 
   if (user?.profileCompleted === false && !onCompleteProfile) {
-    return <Navigate to="/complete-profile" replace />;
+    return <Navigate to={paths.completeProfile} replace />;
   }
 
   const mustFinishDriverSetup =
@@ -29,12 +25,12 @@ export default function OnboardingGuard() {
     DRIVER_SETUP_PATHS.some((prefix) => path.startsWith(prefix));
 
   if (!onboardingComplete) {
-    if (!onOnboarding) return <Navigate to="/onboarding" replace />;
+    if (!onOnboarding) return <Navigate to={paths.onboarding} replace />;
     return <Outlet />;
   }
 
   if (mustFinishDriverSetup) {
-    return <Navigate to="/onboarding/driver-setup" replace state={{ from: path }} />;
+    return <Navigate to={paths.driverSetup} replace state={{ from: path }} />;
   }
 
   return <Outlet />;

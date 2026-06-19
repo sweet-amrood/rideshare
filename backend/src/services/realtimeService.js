@@ -18,4 +18,9 @@ const emitToRideRequest = (requestId, event, payload) => {
   appIo.to(`ride-request:${requestId}`).emit(event, { ...payload, at: new Date().toISOString() });
 };
 
-module.exports = { setAppIo, emitToUser, emitRideRequestEvent, emitToRideRequest };
+const emitToRide = (rideId, event, payload) => {
+  if (!appIo || !rideId) return;
+  appIo.to(`ride:${rideId}`).emit(event, { ...payload, at: new Date().toISOString() });
+};
+
+module.exports = { setAppIo, emitToUser, emitRideRequestEvent, emitToRideRequest, emitToRide };

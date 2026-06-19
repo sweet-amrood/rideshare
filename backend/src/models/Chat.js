@@ -38,5 +38,6 @@ ChatSchema.pre('validate', function (next) {
 });
 
 ChatSchema.index({ rideRequestId: 1, createdAt: 1 });
+ChatSchema.index({ rideId: 1, createdAt: 1 });
 
 module.exports = mongoose.model('Chat', ChatSchema);

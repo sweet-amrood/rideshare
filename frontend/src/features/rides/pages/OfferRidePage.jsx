@@ -10,8 +10,7 @@ export default function OfferRidePage() {
           Offer a ride
         </h1>
         <p className="text-sm sm:text-base text-slate-600 mt-1 max-w-xl">
-          Set your route, seats, fuel split, and preferences. Recurring rides publish multiple
-          scheduled trips automatically.
+          Set your route, seats, and preferences. Fare per seat is calculated from admin platform rates.
         </p>
       </header>
       <OfferRideForm />

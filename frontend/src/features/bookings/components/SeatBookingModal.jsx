@@ -7,18 +7,67 @@ import { BOOKING_VEHICLE_TYPE, BOOKING_MODES } from '../constants';
 import LiveSeatTracker from './LiveSeatTracker';
 import LocationLabel from '@/components/common/LocationLabel';
 import CarpoolFareBreakdown from '@/features/carpool/components/CarpoolFareBreakdown';
-import { getVehicleTypeLabel } from '@/features/rides/constants/searchByVehicleType';
+import { getVehicleTypeLabel, getRideVehicleType } from '@/features/rides/constants/searchByVehicleType';
+import AnimatedModal from '@/components/animations/AnimatedModal';
 
-export default function SeatBookingModal({ ride, onClose, onSuccess }) {
+export default function SeatBookingModal({
+  ride,
+  passengerPickup = null,
+  passengerDestination = null,
+  onClose,
+  onSuccess
+}) {
   const [bookingMode, setBookingMode] = useState(BOOKING_MODES.CARPOOL);
   const [seatsToBook, setSeatsToBook] = useState(1);
   const [loading, setLoading] = useState(false);
   const [seatKey, setSeatKey] = useState(0);
   const [pendingSeats, setPendingSeats] = useState(0);
-  const [fareQuote, setFareQuote] = useState(null);
+  const [liveSeats, setLiveSeats] = useState(null);
+  const [fareQuote, setFareQuote] = useState(ride?.farePreview || null);
 
-  const isCar = ride?.vehicleId?.vehicleType === BOOKING_VEHICLE_TYPE;
-  const maxCarpoolSeats = isCar ? Math.min(4, ride?.availableSeats || 1) : 0;
+  const tripPoints = useMemo(() => {
+    const toCoordPair = (lng, lat) => [Number(lng), Number(lat)];
+    const toAddress = (point, fallback) =>
+      (point?.address || point?.name || fallback).trim();
+
+    if (
+      passengerPickup?.lat != null &&
+      passengerPickup?.lng != null &&
+      passengerDestination?.lat != null &&
+      passengerDestination?.lng != null
+    ) {
+      return {
+        pickupAddress: toAddress(passengerPickup, 'Selected pickup'),
+        pickupCoords: toCoordPair(passengerPickup.lng, passengerPickup.lat),
+        dropoffAddress: toAddress(passengerDestination, 'Selected destination'),
+        dropoffCoords: toCoordPair(passengerDestination.lng, passengerDestination.lat)
+      };
+    }
+    const originCoords = ride?.origin?.location?.coordinates;
+    const destCoords = ride?.destination?.location?.coordinates;
+    return {
+      pickupAddress: ride?.origin?.address || 'Ride pickup',
+      pickupCoords:
+        originCoords?.length === 2
+          ? toCoordPair(originCoords[0], originCoords[1])
+          : originCoords,
+      dropoffAddress: ride?.destination?.address || 'Ride destination',
+      dropoffCoords:
+        destCoords?.length === 2 ? toCoordPair(destCoords[0], destCoords[1]) : destCoords
+    };
+  }, [passengerPickup, passengerDestination, ride]);
+
+  const effectiveAvailable =
+    liveSeats?.effectiveAvailable ??
+    ride?.seatSummary?.effectiveAvailable ??
+    ride?.availableSeats ??
+    0;
+  const confirmedBooked = ride?.seatSummary?.bookedSeats ?? ride?.bookedSeats ?? 0;
+
+  const vehicleType = getRideVehicleType(ride);
+  const isCar = vehicleType === BOOKING_VEHICLE_TYPE;
+  const maxCarpoolSeats =
+    isCar && effectiveAvailable > 0 ? Math.min(4, effectiveAvailable) : 0;
 
   useEffect(() => {
     if (!isCar || !ride?._id) return;
@@ -26,7 +75,10 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
     bookingService
       .getLiveSeats(ride._id)
       .then((res) => {
-        if (!cancelled) setPendingSeats(res?.data?.pendingSeats ?? 0);
+        if (!cancelled) {
+          setPendingSeats(res?.data?.pendingSeats ?? 0);
+          setLiveSeats(res?.data ?? null);
+        }
       })
       .catch(() => {});
     return () => {
@@ -36,16 +88,15 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
 
   const canSolo = useMemo(() => {
     if (!isCar || !ride) return false;
-    const booked = ride.bookedSeats ?? 0;
     return (
-      booked === 0 &&
+      confirmedBooked === 0 &&
       pendingSeats === 0 &&
-      ride.availableSeats >= 1 &&
-      ride.availableSeats === ride.totalSeats
+      effectiveAvailable >= 1 &&
+      effectiveAvailable === ride.totalSeats
     );
-  }, [isCar, ride, pendingSeats]);
+  }, [isCar, ride, pendingSeats, confirmedBooked, effectiveAvailable]);
 
-  const soloSeats = canSolo ? ride.availableSeats : 0;
+  const soloSeats = canSolo ? effectiveAvailable : 0;
   const seatsForBooking =
     bookingMode === BOOKING_MODES.SOLO ? soloSeats : seatsToBook;
 
@@ -54,10 +105,7 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
     let cancelled = false;
     const payload = {
       seatsBooked: seatsForBooking,
-      pickupAddress: ride.origin?.address,
-      pickupCoords: ride.origin?.location?.coordinates,
-      dropoffAddress: ride.destination?.address,
-      dropoffCoords: ride.destination?.location?.coordinates
+      ...tripPoints
     };
     bookingService
       .getFareQuote(ride._id, payload)
@@ -65,12 +113,12 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
         if (!cancelled) setFareQuote(res.data);
       })
       .catch(() => {
-        if (!cancelled) setFareQuote(null);
+        if (!cancelled) setFareQuote(ride?.farePreview || null);
       });
     return () => {
       cancelled = true;
     };
-  }, [isCar, ride, seatsForBooking, bookingMode]);
+  }, [isCar, ride, seatsForBooking, bookingMode, tripPoints]);
 
   useEffect(() => {
     if (bookingMode === BOOKING_MODES.SOLO && !canSolo) {
@@ -78,7 +126,18 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
     }
   }, [bookingMode, canSolo]);
 
-  const totalFare = fareQuote?.yourTotal ?? (ride?.costPerSeat || 0) * seatsForBooking;
+  useEffect(() => {
+    if (bookingMode === BOOKING_MODES.CARPOOL && seatsToBook > maxCarpoolSeats && maxCarpoolSeats > 0) {
+      setSeatsToBook(maxCarpoolSeats);
+    }
+  }, [bookingMode, maxCarpoolSeats, seatsToBook]);
+
+  const totalFare =
+    fareQuote?.yourTotal ??
+    fareQuote?.totalFareCost ??
+    (fareQuote?.farePerSeat != null && seatsForBooking > 0
+      ? fareQuote.farePerSeat * seatsForBooking
+      : null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -98,10 +157,7 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
         bookingMode,
         seatsBooked:
           bookingMode === BOOKING_MODES.SOLO ? soloSeats : parseInt(seatsToBook, 10),
-        pickupAddress: ride.origin.address,
-        pickupCoords: ride.origin.location.coordinates,
-        dropoffAddress: ride.destination.address,
-        dropoffCoords: ride.destination.location.coordinates
+        ...tripPoints
       });
       toast.success(res.message || 'Booking request sent');
       onSuccess?.(res.data);
@@ -115,7 +171,7 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slateCustom-900/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <AnimatedModal open onClose={onClose} zIndex={50}>
       <div className="glass-panel w-full max-w-md p-6 rounded-2xl space-y-5 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -134,7 +190,7 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
         {!isCar ? (
           <p className="text-sm text-amber-300">
             Seat booking is available for <strong>car</strong> carpools only. This ride is a{' '}
-            {getVehicleTypeLabel(ride?.vehicleId?.vehicleType)}.
+            {getVehicleTypeLabel(vehicleType)}.
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -157,6 +213,28 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
                   fallback="Drop-off"
                 />
               </p>
+              {passengerPickup?.lat != null && passengerDestination?.lat != null && (
+                <div className="pt-2 mt-2 border-t border-white/10 space-y-1">
+                  <p className="text-[10px] uppercase font-bold text-brand-300/90 tracking-wide">
+                    Your trip on this ride
+                  </p>
+                  <p className="truncate">
+                    <LocationLabel
+                      address={tripPoints.pickupAddress}
+                      coordinates={tripPoints.pickupCoords}
+                      fallback="Your pickup"
+                    />
+                  </p>
+                  <p className="truncate">
+                    →{' '}
+                    <LocationLabel
+                      address={tripPoints.dropoffAddress}
+                      coordinates={tripPoints.dropoffCoords}
+                      fallback="Your drop-off"
+                    />
+                  </p>
+                </div>
+              )}
             </div>
 
             <CarpoolFareBreakdown quote={fareQuote} />
@@ -244,7 +322,17 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
               </div>
             )}
 
-            <p className="text-sm font-bold text-brand-300">Your total: Rs. {totalFare}</p>
+            {fareQuote?.accepted === false ? (
+              <p className="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
+                {fareQuote.rejectionReason ||
+                  'This ride cannot accommodate your route. Try another carpool.'}
+              </p>
+            ) : (
+              <p className="text-sm font-bold text-brand-300">
+                Your total:{' '}
+                {totalFare != null ? `Rs. ${totalFare}` : 'Calculating fare…'}
+              </p>
+            )}
             <p className="text-xs text-white/55">
               One active trip at a time. After the driver accepts, booking search is disabled until
               this trip completes.
@@ -255,6 +343,8 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
               fullWidth
               disabled={
                 loading ||
+                totalFare == null ||
+                fareQuote?.accepted === false ||
                 (bookingMode === BOOKING_MODES.CARPOOL && maxCarpoolSeats < 1) ||
                 (bookingMode === BOOKING_MODES.SOLO && !canSolo)
               }
@@ -268,6 +358,6 @@ export default function SeatBookingModal({ ride, onClose, onSuccess }) {
           </form>
         )}
       </div>
-    </div>
+    </AnimatedModal>
   );
 }

@@ -189,26 +189,18 @@ io.on('connection', (socket) => {
   socket.on('chat-msg', async ({ rideId, senderId, senderName, message }) => {
     const roomName = `ride:${rideId}`;
     try {
-      // Save message to MongoDB for permanent context storage
-      const newMsg = await Chat.create({
-        rideId,
-        senderId,
-        message
-      });
-
-      // Broadcast message to everyone in the room (including sender)
-      io.to(roomName).emit('chat-msg-received', {
-        _id: newMsg._id,
+      const { saveChatMessage } = require('./services/carpoolChatService');
+      const saved = await saveChatMessage(
         rideId,
         senderId,
         senderName,
-        message,
-        createdAt: newMsg.createdAt
-      });
-      console.log(`New msg in ${roomName} from ${senderName}`);
+        message
+      );
+      io.to(roomName).emit('chat-msg-received', saved);
+      console.log(`New msg in ${roomName} from ${senderName || senderId}`);
     } catch (err) {
       console.error('Error saving socket message:', err.message);
-      socket.emit('socket-error', { message: 'Failed to deliver message' });
+      socket.emit('socket-error', { message: err.message || 'Failed to deliver message' });
     }
   });
 

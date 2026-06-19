@@ -2,6 +2,10 @@ const Ride = require('../models/Ride');
 const User = require('../models/User');
 const rideService = require('../services/rideService');
 const { seatSummary } = require('../utils/rideSeats');
+const {
+  getChatMessages,
+  saveChatMessage
+} = require('../services/carpoolChatService');
 
 /**
  * @route POST /api/v1/rides/offer
@@ -30,7 +34,7 @@ const offerRide = async (req, res, next) => {
  */
 const estimatePrice = async (req, res, next) => {
   try {
-    const pricing = rideService.estimatePrice(req.body);
+    const pricing = await rideService.estimatePrice(req.body);
     return res.status(200).json({ success: true, pricing });
   } catch (error) {
     next(error);
@@ -120,12 +124,41 @@ const cancelRide = async (req, res, next) => {
   }
 };
 
+const getRideChat = async (req, res, next) => {
+  try {
+    const messages = await getChatMessages(req.params.id, req.user._id);
+    return res.status(200).json({ success: true, data: messages });
+  } catch (error) {
+    if (error.statusCode) res.status(error.statusCode);
+    next(error);
+  }
+};
+
+const sendRideChat = async (req, res, next) => {
+  try {
+    const message = await saveChatMessage(
+      req.params.id,
+      req.user._id,
+      req.user.name,
+      req.body.message
+    );
+    const { emitToRide } = require('../services/realtimeService');
+    emitToRide(req.params.id, 'chat-msg-received', message);
+    return res.status(201).json({ success: true, data: message });
+  } catch (error) {
+    if (error.statusCode) res.status(error.statusCode);
+    next(error);
+  }
+};
+
 module.exports = {
   offerRide,
   estimatePrice,
   searchRides,
   getMyOffers,
   getRideById,
+  getRideChat,
+  sendRideChat,
   updateRide,
   cancelRide
 };

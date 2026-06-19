@@ -18,6 +18,7 @@ const VEHICLE_FIELDS = [
 ];
 
 const GLOBAL_FIELDS = [
+  { key: 'acPremiumMultiplier', label: 'Carpool AC premium multiplier', hint: 'Non-AC uses base CAR rate; AC = rate × this (e.g. 1.15 = +15%)' },
   { key: 'nightMultiplier', label: 'Night multiplier' },
   { key: 'nightStartHour', label: 'Night starts (hour)' },
   { key: 'nightEndHour', label: 'Night ends (hour)' },
@@ -71,6 +72,7 @@ export default function FareSettingsPage() {
         nightEndHour: form.nightEndHour,
         driverNotifyRadiusMeters: form.driverNotifyRadiusMeters,
         avgSpeedKmh: form.avgSpeedKmh,
+        acPremiumMultiplier: form.acPremiumMultiplier,
         vehicleRates: form.vehicleRates
       };
       const r = await api.patch('/admin/settings/fare', payload);
@@ -146,9 +148,10 @@ export default function FareSettingsPage() {
         <section>
           <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Global</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {GLOBAL_FIELDS.map(({ key, label }) => (
+            {GLOBAL_FIELDS.map(({ key, label, hint }) => (
               <label key={key} className="block">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{label}</span>
+                {hint && <span className="block text-[10px] text-slate-500 mt-0.5 normal-case">{hint}</span>}
                 <input
                   type="number"
                   step="any"

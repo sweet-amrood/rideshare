@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
@@ -11,6 +12,9 @@ import PrivacyTab from '../components/PrivacyTab';
 import ReviewsTab from '../components/ReviewsTab';
 import VerificationTab from '../components/VerificationTab';
 import VehiclesTab from '../components/VehiclesTab';
+import ScrollReveal from '@/components/animations/ScrollReveal';
+import { pageSlideVariants } from '@/animations/pageVariants';
+import { springGentle } from '@/animations/motionConfig';
 
 const tabBtnClass = (active) =>
   `shrink-0 pb-3 px-1 font-bold text-sm transition-all border-b-2 cursor-pointer bg-transparent border-0 outline-none whitespace-nowrap ${
@@ -27,9 +31,16 @@ function TabGroup({ label, tabs, activeTab, onSelect, vehiclesCount }) {
         </span>
       )}
       {tabs.map((t) => (
-        <button key={t.id} type="button" onClick={() => onSelect(t.id)} className={tabBtnClass(activeTab === t.id)}>
+        <button key={t.id} type="button" onClick={() => onSelect(t.id)} className={`relative ${tabBtnClass(activeTab === t.id)}`}>
           {t.label}
           {t.id === 'vehicles' && vehiclesCount != null ? ` (${vehiclesCount})` : ''}
+          {activeTab === t.id && (
+            <motion.div
+              layoutId="profile-tab-underline"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500 rounded-full"
+              transition={springGentle}
+            />
+          )}
         </button>
       ))}
     </div>
@@ -139,6 +150,7 @@ export default function ProfileHubPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
+      <ScrollReveal>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
           <User className="h-7 w-7 text-brand-400" />
@@ -150,7 +162,9 @@ export default function ProfileHubPage() {
           {isDriver && !isRider && ' · driver tabs below'}
         </p>
       </div>
+      </ScrollReveal>
 
+      <ScrollReveal delay={0.05}>
       <ProfileHeader
         user={displayUser}
         onEditAvatar={() => {
@@ -158,6 +172,7 @@ export default function ProfileHubPage() {
           setAvatarPrompt(true);
         }}
       />
+      </ScrollReveal>
 
       {avatarPrompt && activeTab === 'about' && (
         <p className="text-xs text-brand-300 bg-brand-500/10 border border-brand-500/20 px-3 py-2 rounded-lg">
@@ -184,6 +199,15 @@ export default function ProfileHubPage() {
         </div>
       </div>
 
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          variants={pageSlideVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={{ duration: 0.22 }}
+        >
       {activeTab === 'about' && <ProfileEditTab user={displayUser} onUpdated={handleProfileUpdated} />}
       {activeTab === 'preferences' && isRider && (
         <PreferencesTab user={displayUser} onUpdated={handleProfileUpdated} />
@@ -206,6 +230,8 @@ export default function ProfileHubPage() {
           }}
         />
       )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

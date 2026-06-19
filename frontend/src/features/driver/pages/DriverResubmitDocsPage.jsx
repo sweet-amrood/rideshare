@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import DriverSetupWizard from '../components/DriverSetupWizard';
+import { paths } from '@/app/router/paths';
 
 export default function DriverResubmitDocsPage() {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ export default function DriverResubmitDocsPage() {
   const handleComplete = (data) => {
     const verification = data?.user?.verification || data?.verification;
     if (verification) setUser({ verification });
-    navigate('/profile', { state: { tab: 'verification' }, replace: true });
+    navigate(paths.profile, { state: { tab: 'verification' }, replace: true });
   };
 
   return (
@@ -21,7 +22,7 @@ export default function DriverResubmitDocsPage() {
           title="Re-upload verification documents"
           subtitle="Replace any rejected CNIC, selfie, or license files. Your profile will return to pending review."
           onComplete={handleComplete}
-          onCancel={() => navigate('/profile')}
+          onCancel={() => navigate(paths.profile)}
           showCancel
         />
       </div>

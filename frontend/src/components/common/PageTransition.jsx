@@ -1,19 +1,16 @@
-import { motion } from 'framer-motion';
-
-const pageVariants = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 }
-};
+import { motion, useReducedMotion } from 'framer-motion';
+import { pageTransition, pageVariants } from '@/animations/pageVariants';
 
 export default function PageTransition({ children, className = '' }) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.div
       variants={pageVariants}
       initial="initial"
       animate="animate"
       exit="exit"
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      transition={reduceMotion ? { duration: 0.01 } : pageTransition}
       className={className}
     >
       {children}

@@ -85,7 +85,12 @@ export default function CarpoolingPage() {
               <Car className="h-5 w-5 text-brand-400" />
               Publish a carpool
             </h2>
-            <OfferRideForm variant="carpool" onPublished={() => setTab('manage')} />
+            <OfferRideForm
+              variant="carpool"
+              onPublished={() => {
+                bumpRidesRefresh();
+              }}
+            />
           </section>
 
           <section>

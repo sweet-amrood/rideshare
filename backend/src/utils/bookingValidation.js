@@ -6,15 +6,16 @@ const {
   BOOKING_MODES
 } = require('../constants/booking');
 
-const isValidCoords = (coords) =>
-  Array.isArray(coords) &&
-  coords.length === 2 &&
-  typeof coords[0] === 'number' &&
-  typeof coords[1] === 'number' &&
-  coords[0] >= -180 &&
-  coords[0] <= 180 &&
-  coords[1] >= -90 &&
-  coords[1] <= 90;
+const normalizeCoords = (coords) => {
+  if (!Array.isArray(coords) || coords.length !== 2) return null;
+  const lng = Number(coords[0]);
+  const lat = Number(coords[1]);
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+  if (lng < -180 || lng > 180 || lat < -90 || lat > 90) return null;
+  return [lng, lat];
+};
+
+const isValidCoords = (coords) => normalizeCoords(coords) != null;
 
 const validateCreateBookingPayload = (body) => {
   const errors = [];
@@ -32,10 +33,20 @@ const validateCreateBookingPayload = (body) => {
 
   if (!body.pickupAddress?.trim()) errors.push('pickupAddress is required');
   if (!body.dropoffAddress?.trim()) errors.push('dropoffAddress is required');
-  if (!isValidCoords(body.pickupCoords)) errors.push('pickupCoords must be [lng, lat]');
-  if (!isValidCoords(body.dropoffCoords)) errors.push('dropoffCoords must be [lng, lat]');
 
-  return { ok: errors.length === 0, errors, seatsBooked: seats, bookingMode };
+  const pickupCoords = normalizeCoords(body.pickupCoords);
+  const dropoffCoords = normalizeCoords(body.dropoffCoords);
+  if (!pickupCoords) errors.push('pickupCoords must be [lng, lat]');
+  if (!dropoffCoords) errors.push('dropoffCoords must be [lng, lat]');
+
+  return {
+    ok: errors.length === 0,
+    errors,
+    seatsBooked: seats,
+    bookingMode,
+    pickupCoords,
+    dropoffCoords
+  };
 };
 
 const assertCarRideForBooking = (ride, vehicle) => {
@@ -71,5 +82,6 @@ module.exports = {
   canPassengerCancel,
   canDriverCancel,
   isValidCoords,
+  normalizeCoords,
   ACTIVE_BOOKING_STATUSES
 };

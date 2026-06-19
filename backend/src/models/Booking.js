@@ -72,7 +72,18 @@ const BookingSchema = new mongoose.Schema(
       costPerSeat: { type: Number, required: true, min: 0 },
       seatsBooked: { type: Number, required: true, min: 1 },
       subtotal: { type: Number, required: true, min: 0 },
-      currency: { type: String, default: 'PKR' }
+      currency: { type: String, default: 'PKR' },
+      costPerKm: { type: Number, default: 0 },
+      ownDistanceKm: { type: Number, default: 0 },
+      detourDistanceKm: { type: Number, default: 0 },
+      totalFareDistanceKm: { type: Number, default: 0 },
+      mainDistanceKm: { type: Number, default: 0 },
+      totalDistanceKm: { type: Number, default: 0 },
+      totalFuelCost: { type: Number, default: 0 },
+      costPerSeatIfFull: { type: Number, default: 0 },
+      routeOldDistanceKm: { type: Number, default: 0 },
+      routeNewDistanceKm: { type: Number, default: 0 },
+      fareFormula: { type: String, default: '' }
     },
     farePaid: { type: Number, required: true, min: 0 },
     status: {

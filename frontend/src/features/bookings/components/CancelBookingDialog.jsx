@@ -3,6 +3,7 @@ import { XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AppButton from '@/components/common/AppButton';
 import { bookingService } from '@/api/services/booking.service';
+import AnimatedModal from '@/components/animations/AnimatedModal';
 
 export default function CancelBookingDialog({ booking, onClose, onCancelled }) {
   const [reason, setReason] = useState('');
@@ -26,7 +27,7 @@ export default function CancelBookingDialog({ booking, onClose, onCancelled }) {
     booking.paymentStatus === 'PAID' || booking.status === 'CONFIRMED';
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+    <AnimatedModal open onClose={onClose} zIndex={60}>
       <div className="glass-panel max-w-sm w-full p-5 rounded-2xl space-y-4">
         <h3 className="font-bold text-white flex items-center gap-2">
           <XCircle className="h-5 w-5 text-red-400" />
@@ -65,6 +66,6 @@ export default function CancelBookingDialog({ booking, onClose, onCancelled }) {
           </AppButton>
         </div>
       </div>
-    </div>
+    </AnimatedModal>
   );
 }

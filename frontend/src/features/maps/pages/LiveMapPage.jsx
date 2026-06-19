@@ -9,6 +9,7 @@ import TripSummaryCard from '../components/TripSummaryCard';
 import NearbyRidesList from '../components/NearbyRidesList';
 import RouteOptimizationTips from '../components/RouteOptimizationTips';
 import AppButton from '@/components/common/AppButton';
+import { paths } from '@/app/router/paths';
 import { useMapsBootstrap } from '../hooks/useMapsBootstrap';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { useTripRoute } from '../hooks/useTripRoute';
@@ -222,7 +223,7 @@ export default function LiveMapPage() {
           rides={nearby}
           loading={searching}
           onSelectRide={onSelectRide}
-          onBook={(ride) => navigate('/find', { state: { rideId: ride._id } })}
+          onBook={(ride) => navigate(paths.find, { state: { rideId: ride._id } })}
         />
       </aside>
 

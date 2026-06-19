@@ -1,17 +1,9 @@
-const Notification = require('../models/Notification');
 const { sendSMS } = require('./textbee');
 const { NOTIFICATION_TYPES } = require('../constants/booking');
-
-const persistNotification = async (userId, type, title, body, data = {}) => {
-  try {
-    await Notification.create({ userId, type, title, body, data });
-  } catch (err) {
-    console.error('[notification]', err.message);
-  }
-};
+const { createNotification } = require('./notificationService');
 
 const notifyUser = async ({ userId, phone, type, title, body, data }) => {
-  await persistNotification(userId, type, title, body, data);
+  await createNotification({ userId, type, title, body, data });
   if (phone) {
     try {
       await sendSMS(phone, `${title}: ${body}`);
@@ -27,7 +19,7 @@ const notifyBookingRequested = async (driver, passenger, booking, ride) => {
     phone: driver.phoneNumber,
     type: NOTIFICATION_TYPES.BOOKING_REQUESTED,
     title: 'New seat request',
-    body: `${passenger.name} requested a ${booking.bookingMode === 'SOLO' ? 'solo (private)' : 'carpool'} booking — ${booking.seatsBooked} seat(s) on ${ride.origin?.address || 'your route'}.`,
+    body: `${passenger.name} requested ${booking.seatsBooked} seat(s) on your carpool.`,
     data: { bookingId: booking._id, rideId: ride._id }
   });
 };
@@ -38,7 +30,7 @@ const notifyBookingConfirmed = async (passenger, driver, booking) => {
     phone: passenger.phoneNumber,
     type: NOTIFICATION_TYPES.BOOKING_CONFIRMED,
     title: 'Booking confirmed',
-    body: `Driver ${driver.name} confirmed ${booking.seatsBooked} seat(s). Ref: ${booking.bookingRef}.`,
+    body: `Driver ${driver.name} confirmed your seat. Ref: ${booking.bookingRef}.`,
     data: { bookingId: booking._id, rideId: booking.rideId }
   });
 };
@@ -49,7 +41,7 @@ const notifyBookingRejected = async (passenger, driver, booking) => {
     phone: passenger.phoneNumber,
     type: NOTIFICATION_TYPES.BOOKING_REJECTED,
     title: 'Request declined',
-    body: `Driver ${driver.name} declined your booking ${booking.bookingRef}.`,
+    body: `Driver ${driver.name} declined booking ${booking.bookingRef}.`,
     data: { bookingId: booking._id, rideId: booking.rideId }
   });
 };
@@ -71,13 +63,35 @@ const notifyRefundPrepared = async (passenger, booking, amount) => {
     phone: passenger.phoneNumber,
     type: NOTIFICATION_TYPES.REFUND_PREPARED,
     title: 'Refund prepared',
-    body: `Rs. ${amount} refund queued for booking ${booking.bookingRef}. Processing may take 3–5 business days.`,
+    body: `Rs. ${amount} refund queued for booking ${booking.bookingRef}.`,
     data: { bookingId: booking._id, rideId: booking.rideId }
   });
 };
 
+const notifyRideStarted = async (passengers, ride, driverName, firstPickupBookingId = null) => {
+  await Promise.all(
+    passengers.map((passenger) => {
+      if (!passenger?._id) return Promise.resolve();
+      const isFirst =
+        firstPickupBookingId &&
+        passenger.bookingId &&
+        String(passenger.bookingId) === String(firstPickupBookingId);
+      return notifyUser({
+        userId: passenger._id,
+        phone: passenger.phoneNumber,
+        type: NOTIFICATION_TYPES.RIDE_STARTED,
+        title: isFirst ? 'Driver is heading to you' : 'Carpool started',
+        body: isFirst
+          ? `${driverName} started the ride and is coming to pick you up.`
+          : `${driverName} started the carpool — you will be picked up in route order.`,
+        data: { rideId: ride._id, bookingId: passenger.bookingId }
+      });
+    })
+  );
+};
+
 const notifyRideCompleted = async (users, ride) => {
-  const body = `Ride from ${ride.origin?.address} is marked complete. Thank you for carpooling!`;
+  const body = `Ride from ${ride.origin?.address || 'your route'} is complete.`;
   await Promise.all(
     users.map((u) =>
       notifyUser({
@@ -98,6 +112,7 @@ module.exports = {
   notifyBookingRejected,
   notifyBookingCancelled,
   notifyRefundPrepared,
+  notifyRideStarted,
   notifyRideCompleted,
-  persistNotification
+  notifyUser
 };

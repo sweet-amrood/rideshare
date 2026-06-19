@@ -39,13 +39,13 @@ export const DEFAULT_FORM = {
   recurrenceDays: [],
   weeksAhead: 4,
   totalSeats: 3,
-  totalFuelCost: '',
-  costPerSeat: 200,
-  autoFuelFromDistance: true,
+  costPerSeat: 0,
+  distanceKm: null,
   restrictions: {
     womenOnly: false,
     universityOnly: false,
-    officeOnly: false
+    officeOnly: false,
+    sideDetourKm: 3
   },
   amenities: {
     luggageAllowed: 'SMALL',

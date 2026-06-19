@@ -17,7 +17,6 @@ export default function RideTypeSearchModal({
   onClose,
   onSearch,
   loading = false,
-  departureDate,
   pickup,
   destination
 }) {
@@ -50,7 +49,6 @@ export default function RideTypeSearchModal({
       hasAC: prefs.showAC && preferAC ? true : undefined,
       luggageAllowed: luggage || undefined,
       womenOnly: womenOnly || undefined,
-      departureDate: departureDate || undefined,
       passengerOfferedFare: offeredFare
     });
   };

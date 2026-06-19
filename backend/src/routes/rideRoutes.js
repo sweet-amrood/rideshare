@@ -5,6 +5,8 @@ const {
   searchRides,
   getMyOffers,
   getRideById,
+  getRideChat,
+  sendRideChat,
   updateRide,
   cancelRide
 } = require('../controllers/rideController');
@@ -18,6 +20,8 @@ router.post('/offer', authorize('DRIVER'), offerRide);
 router.post('/estimate-price', estimatePrice);
 router.post('/search', searchRides);
 router.get('/my-offers', getMyOffers);
+router.get('/:id/chat', getRideChat);
+router.post('/:id/chat', sendRideChat);
 router.get('/:id', getRideById);
 router.patch('/:id', updateRide);
 router.delete('/:id', cancelRide);

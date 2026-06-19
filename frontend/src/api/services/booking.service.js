@@ -14,6 +14,17 @@ export const bookingService = {
   getFareQuote: (rideId, payload) =>
     api.post(endpoints.bookings.fareQuote(rideId), payload).then((r) => r.data),
 
+  getRideChat: (rideId) => api.get(endpoints.rides.chat(rideId)).then((r) => r.data),
+
+  sendRideChat: (rideId, message) =>
+    api.post(endpoints.rides.chat(rideId), { message }).then((r) => r.data),
+
+  getStartCandidates: (rideId, params = {}) =>
+    api.get(endpoints.bookings.startCandidates(rideId), { params }).then((r) => r.data),
+
+  startRide: (rideId, payload) =>
+    api.post(endpoints.bookings.startRide(rideId), payload).then((r) => r.data),
+
   getHistory: (params = {}) =>
     api.get(endpoints.bookings.history, { params }).then((r) => r.data),
 

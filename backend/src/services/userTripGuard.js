@@ -41,7 +41,7 @@ const getPassengerActiveCarpoolBooking = async (passengerId) => {
       booking.completedAt = new Date();
       await booking.save();
     }
-    return null;
+    return booking;
   }
 
   if (rideStatus === 'CANCELLED') {

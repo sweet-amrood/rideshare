@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { paths } from './paths';
 
 export default function PublicRoute({ children }) {
   const { token, user, loading, isInitialized, onboardingComplete } = useAuth();
@@ -11,9 +12,11 @@ export default function PublicRoute({ children }) {
 
   if (token && user) {
     if (user.profileCompleted === false || user.requiresProfileCompletion) {
-      return <Navigate to="/complete-profile" replace />;
+      return <Navigate to={paths.completeProfile} replace />;
     }
-    return <Navigate to={onboardingComplete ? '/dashboard' : '/onboarding'} replace />;
+    return (
+      <Navigate to={onboardingComplete ? paths.dashboard : paths.onboarding} replace />
+    );
   }
 
   return children;

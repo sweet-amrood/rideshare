@@ -4,6 +4,7 @@ import { ArrowLeft, Star } from 'lucide-react';
 import { profileService } from '@/api/services/profile.service';
 import VerificationBadges from '../components/VerificationBadges';
 import ReviewsTab from '../components/ReviewsTab';
+import { paths } from '@/app/router/paths';
 
 export default function PublicProfilePage() {
   const { userId } = useParams();
@@ -30,7 +31,7 @@ export default function PublicProfilePage() {
     return (
       <div className="max-w-3xl mx-auto py-20 text-center space-y-4">
         <p className="text-white/80">{error || 'User not found'}</p>
-        <Link to="/dashboard" className="text-brand-400 text-sm font-semibold no-underline">
+        <Link to={paths.dashboard} className="text-brand-400 text-sm font-semibold no-underline">
           Back to dashboard
         </Link>
       </div>
@@ -42,7 +43,7 @@ export default function PublicProfilePage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
-      <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white no-underline">
+      <Link to={paths.dashboard} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white no-underline">
         <ArrowLeft className="h-4 w-4" />
         Back
       </Link>

@@ -4,7 +4,9 @@ import { MapPin, Clock, MessageSquare, XCircle, Banknote } from 'lucide-react';
 import BookingStatusBadge from './BookingStatusBadge';
 import LocationLabel from '@/components/common/LocationLabel';
 import CancelBookingDialog from './CancelBookingDialog';
+import AnimatedCard from '@/components/animations/AnimatedCard';
 import { BOOKING_STATUS, BOOKING_MODE_LABELS } from '../constants';
+import { paths } from '@/app/router/paths';
 
 export default function BookingCard({ booking, role = 'passenger', onRefresh }) {
   const navigate = useNavigate();
@@ -15,7 +17,11 @@ export default function BookingCard({ booking, role = 'passenger', onRefresh }) 
 
   return (
     <>
-      <article className="glass-panel p-5 rounded-2xl border-l-4 border-l-brand-500 space-y-3">
+      <AnimatedCard
+        as="article"
+        layout
+        className="glass-panel p-5 rounded-2xl border-l-4 border-l-brand-500 space-y-3"
+      >
         <div className="flex flex-wrap justify-between gap-2">
           <div>
             <BookingStatusBadge status={booking.status} paymentStatus={booking.paymentStatus} />
@@ -73,7 +79,7 @@ export default function BookingCard({ booking, role = 'passenger', onRefresh }) 
             <button
               type="button"
               onClick={() =>
-                navigate(`/chat/${ride._id}`, { state: { from: '/bookings', fromLabel: 'My bookings' } })
+                navigate(paths.chat(ride._id), { state: { from: paths.bookings, fromLabel: 'My bookings' } })
               }
               className="btn-primary flex-1 min-w-[120px] py-2 text-sm flex items-center justify-center gap-2 border-0"
             >
@@ -92,7 +98,7 @@ export default function BookingCard({ booking, role = 'passenger', onRefresh }) 
             </button>
           )}
         </div>
-      </article>
+      </AnimatedCard>
 
       {showCancel && (
         <CancelBookingDialog

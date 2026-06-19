@@ -174,6 +174,30 @@ const getFareQuote = async (req, res, next) => {
   }
 };
 
+const getStartRideCandidates = async (req, res, next) => {
+  try {
+    const data = await bookingService.getStartRideCandidates(req.user, req.params.rideId, req.query);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    if (error.statusCode) res.status(error.statusCode);
+    next(error);
+  }
+};
+
+const startRide = async (req, res, next) => {
+  try {
+    const result = await bookingService.startRide(req.user, req.params.rideId, req.body);
+    return res.status(200).json({
+      success: true,
+      message: result.alreadyStarted ? 'Ride already in progress' : 'Ride started',
+      data: result
+    });
+  } catch (error) {
+    if (error.statusCode) res.status(error.statusCode);
+    next(error);
+  }
+};
+
 module.exports = {
   createBooking,
   updateBookingStatus,
@@ -187,5 +211,7 @@ module.exports = {
   getMyTrips,
   getIncomingBookings,
   getActiveCommitment,
-  getFareQuote
+  getFareQuote,
+  getStartRideCandidates,
+  startRide
 };

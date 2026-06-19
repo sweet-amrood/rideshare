@@ -9,6 +9,7 @@ import AppButton from '@/components/common/AppButton';
 import DriverSetupWizard from '../components/DriverSetupWizard';
 import DriverApplicationSubmittedDialog from '../components/DriverApplicationSubmittedDialog';
 import { useDriverApplicationFlow } from '../hooks/useDriverApplicationFlow';
+import { paths } from '@/app/router/paths';
 
 export default function DriverSetupPage() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function DriverSetupPage() {
         });
       }
       toast.success('Passenger mode — driver setup skipped for now');
-      navigate('/find', { replace: true });
+      navigate(paths.find, { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not switch to passenger');
     } finally {
@@ -68,7 +69,7 @@ export default function DriverSetupPage() {
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/45 mb-2">
               Commuter mode
             </p>
-            <CommuterRoleToggle onRoleChange={(u) => u?.roles?.includes('RIDER') && navigate('/find', { replace: true })} />
+            <CommuterRoleToggle onRoleChange={(u) => u?.roles?.includes('RIDER') && navigate(paths.find, { replace: true })} />
           </div>
           <p className="text-xs text-white/55">
             Only need to book rides? Switch to <strong className="text-brand-300">Passenger</strong> above

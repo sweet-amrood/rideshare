@@ -9,6 +9,7 @@ import AppButton from '@/components/common/AppButton';
 import api from '@/api/axios';
 import { endpoints } from '@/api/endpoints';
 import { useRoles } from '@/hooks/useRoles';
+import { paths } from '@/app/router/paths';
 
 export default function LiveMapPage() {
   const navigate = useNavigate();
@@ -109,11 +110,11 @@ export default function LiveMapPage() {
               routes; passengers book seats on rides you publish.
             </p>
             <div className="flex flex-col gap-2">
-              <AppButton type="button" onClick={() => navigate('/offer')}>
+              <AppButton type="button" onClick={() => navigate(paths.offer)}>
                 <Car className="inline h-4 w-4 mr-1" />
                 Driver hub — manage rides
               </AppButton>
-              <AppButton type="button" variant="secondary" onClick={() => navigate('/dashboard')}>
+              <AppButton type="button" variant="secondary" onClick={() => navigate(paths.dashboard)}>
                 Dashboard & booking requests
               </AppButton>
             </div>
@@ -164,7 +165,7 @@ export default function LiveMapPage() {
               <AppButton
                 type="button"
                 variant="secondary"
-                onClick={() => navigate('/find', { state: { pickup, destination } })}
+                onClick={() => navigate(paths.find, { state: { pickup, destination } })}
               >
                 <Users className="inline h-4 w-4 mr-1" />
                 Find & book a ride
@@ -174,7 +175,7 @@ export default function LiveMapPage() {
             {isDriver && isRider && (
               <button
                 type="button"
-                onClick={() => navigate('/offer')}
+                onClick={() => navigate(paths.offer)}
                 className="text-xs font-semibold text-white/60 border-0 bg-transparent outline-none text-left"
               >
                 Driver hub →

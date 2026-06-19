@@ -5,7 +5,6 @@ import api from '@/api/axios';
 import { endpoints } from '@/api/endpoints';
 import {
   Ticket,
-  Calendar,
   Users,
   AlertCircle,
   MapPin,
@@ -25,7 +24,7 @@ import {
   geolocationErrorMessage
 } from '@/components/map/geolocation';
 import AppButton from '@/components/common/AppButton';
-import RideTypeSearchModal from '@/features/rides/components/RideTypeSearchModal';
+import { paths } from '@/app/router/paths';
 import PassengerFareOfferBanner from '@/features/rides/components/PassengerFareOfferBanner';
 import ActiveRideSession from '@/features/rides/components/ActiveRideSession';
 import ActiveCarpoolSession from '@/features/carpool/components/ActiveCarpoolSession';
@@ -46,7 +45,6 @@ export default function FindRide() {
     if (location.state?.pickup) setPickup(location.state.pickup);
     if (location.state?.destination) setDestination(location.state.destination);
   }, [location.state]);
-  const [depDate, setDepDate] = useState('');
   const [activeField, setActiveField] = useState('pickup');
   const [locatingPickup, setLocatingPickup] = useState(false);
 
@@ -509,11 +507,22 @@ export default function FindRide() {
   }
 
   if (!tripLoading && commitment?.kind === 'CARPOOL_BOOKING') {
-    return (
-      <div className="max-w-6xl mx-auto pb-10">
-        <ActiveCarpoolSession booking={commitment.data} onDismiss={refreshTrip} />
-      </div>
-    );
+    const dismissed =
+      typeof window !== 'undefined' &&
+      sessionStorage.getItem(`carpool-dismissed-${commitment.data._id}`);
+    if (!dismissed) {
+      return (
+        <div className="max-w-6xl mx-auto pb-10">
+          <ActiveCarpoolSession
+            booking={commitment.data}
+            onDismiss={() => {
+              sessionStorage.setItem(`carpool-dismissed-${commitment.data._id}`, '1');
+              refreshTrip({ silent: true });
+            }}
+          />
+        </div>
+      );
+    }
   }
 
   return (
@@ -527,14 +536,14 @@ export default function FindRide() {
           </h1>
           <p className="text-white/75 text-sm mt-2 max-w-xl">
             On-demand rides — broadcast to nearby drivers. For scheduled carpools, use{' '}
-            <Link to="/carpooling" className="text-brand-400 font-semibold no-underline hover:text-brand-300">
+            <Link to={paths.carpooling} className="text-brand-400 font-semibold no-underline hover:text-brand-300">
               Carpooling
             </Link>
             .
           </p>
         </div>
         <Link
-          to="/map"
+          to={paths.map}
           state={{ pickup, destination }}
           className="text-sm font-semibold text-brand-400 no-underline hover:text-brand-300 shrink-0"
         >
@@ -763,22 +772,8 @@ export default function FindRide() {
         )}
 
         {!broadcasting && (
-        <form onSubmit={handleFindClick} className="flex flex-col sm:flex-row gap-3 sm:items-end">
-          <div className="flex-1">
-            <label className="text-[10px] uppercase font-bold text-white/70 tracking-wider block mb-1">
-              Departure date
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-white/50" />
-              <input
-                type="date"
-                value={depDate}
-                onChange={(e) => setDepDate(e.target.value)}
-                className="w-full bg-slateCustom-800 border border-slateCustom-600 rounded-lg pl-10 pr-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/50"
-              />
-            </div>
-          </div>
-          <AppButton type="submit" disabled={loading} className="w-full sm:w-auto sm:min-w-[200px]">
+        <form onSubmit={handleFindClick}>
+          <AppButton type="submit" disabled={loading} fullWidth className="sm:max-w-xs">
             {loading ? 'Searching…' : 'Find available rides'}
           </AppButton>
         </form>
@@ -811,7 +806,6 @@ export default function FindRide() {
         onClose={() => setShowTypeModal(false)}
         onSearch={executeSearch}
         loading={loading}
-        departureDate={depDate}
         pickup={pickup}
         destination={destination}
       />

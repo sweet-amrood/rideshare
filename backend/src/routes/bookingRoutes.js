@@ -12,6 +12,8 @@ const {
   getIncomingBookings,
   getActiveCommitment,
   getFareQuote,
+  getStartRideCandidates,
+  startRide,
   getCarpoolLiveMap
 } = require('../controllers/bookingController');
 const { protect } = require('../middlewares/authMiddleware');
@@ -28,6 +30,8 @@ router.get('/my-trips', getMyTrips);
 router.post('/ride/:rideId/fare-quote', getFareQuote);
 router.get('/ride/:rideId/seats', getLiveSeats);
 router.get('/ride/:rideId/live-map', getCarpoolLiveMap);
+router.get('/ride/:rideId/start-candidates', getStartRideCandidates);
+router.post('/ride/:rideId/start', startRide);
 router.post('/ride/:rideId/complete', completeRide);
 router.get('/:id', getBookingById);
 router.patch('/:id/status', updateBookingStatus);

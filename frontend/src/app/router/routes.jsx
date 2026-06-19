@@ -1,12 +1,20 @@
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import RootLayout from '@/components/layouts/RootLayout';
+import MarketingLayout from '@/components/layouts/MarketingLayout';
 import AuthLayout from '@/components/layouts/AuthLayout';
 import MainLayout from '@/components/layouts/MainLayout';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
 import OnboardingGuard from './OnboardingGuard';
 import RoleRoute from './RoleRoute';
+import MobileRedirect from './MobileRedirect';
+import AppPathRedirect from './AppPathRedirect';
+import { paths } from './paths';
+
+const LandingPage = lazy(() => import('@/pages/marketing/LandingPage'));
+const AboutPage = lazy(() => import('@/pages/marketing/AboutPage'));
+const ContactPage = lazy(() => import('@/pages/marketing/ContactPage'));
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
@@ -29,94 +37,141 @@ const MapPage = lazy(() => import('@/pages/MapPage'));
 const BookingHistoryPage = lazy(() => import('@/features/bookings/pages/BookingHistoryPage'));
 const CarpoolingPage = lazy(() => import('@/features/carpool/pages/CarpoolingPage'));
 
+/** App routes nested under /app */
+const appChildren = [
+  { index: true, element: <Navigate to="dashboard" replace /> },
+
+  {
+    element: (
+      <PublicRoute>
+        <AuthLayout />
+      </PublicRoute>
+    ),
+    children: [
+      { path: 'login', element: <LoginPage /> },
+      { path: 'register', element: <RegisterPage /> },
+      { path: 'verify-email', element: <VerifyEmailPage /> },
+      { path: 'forgot-password', element: <ForgotPasswordPage /> },
+      { path: 'reset-password', element: <ResetPasswordPage /> }
+    ]
+  },
+
+  {
+    element: <ProtectedRoute />,
+    children: [
+      { path: 'complete-profile', element: <CompleteProfilePage /> },
+      { path: 'onboarding', element: <OnboardingPage /> },
+      { path: 'onboarding/driver-setup', element: <DriverSetupPage /> },
+      {
+        element: <OnboardingGuard />,
+        children: [
+          {
+            element: <MainLayout />,
+            children: [
+              { path: 'dashboard', element: <Dashboard /> },
+              {
+                path: 'find',
+                element: (
+                  <RoleRoute allow="RIDER" redirectTo={paths.dashboard}>
+                    <FindRide />
+                  </RoleRoute>
+                )
+              },
+              {
+                path: 'carpooling',
+                element: (
+                  <RoleRoute allow={['RIDER', 'DRIVER']} redirectTo={paths.dashboard}>
+                    <CarpoolingPage />
+                  </RoleRoute>
+                )
+              },
+              {
+                path: 'bookings',
+                element: (
+                  <RoleRoute allow="RIDER" redirectTo={paths.dashboard}>
+                    <BookingHistoryPage />
+                  </RoleRoute>
+                )
+              },
+              {
+                path: 'offer',
+                element: (
+                  <RoleRoute allow="DRIVER" redirectTo={paths.dashboard}>
+                    <OfferRide />
+                  </RoleRoute>
+                )
+              },
+              { path: 'profile', element: <Profile /> },
+              {
+                path: 'driver/resubmit-documents',
+                element: (
+                  <RoleRoute allow="DRIVER" redirectTo={paths.profile}>
+                    <DriverResubmitDocsPage />
+                  </RoleRoute>
+                )
+              },
+              { path: 'users/:userId', element: <PublicProfilePage /> },
+              { path: 'chat/:rideId', element: <ChatPage /> },
+              { path: 'ride-request/:requestId/chat', element: <RideRequestChatPage /> },
+              { path: 'map', element: <MapPage /> }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  { path: '*', element: <Navigate to={paths.dashboard} replace /> }
+];
+
+/** Pre-/app URLs → /app/... for bookmarks and old links */
+const legacyAppRoutes = [
+  { path: 'login', element: <AppPathRedirect /> },
+  { path: 'register', element: <AppPathRedirect /> },
+  { path: 'verify-email', element: <AppPathRedirect /> },
+  { path: 'forgot-password', element: <AppPathRedirect /> },
+  { path: 'reset-password', element: <AppPathRedirect /> },
+  { path: 'complete-profile', element: <AppPathRedirect /> },
+  { path: 'onboarding/*', element: <AppPathRedirect /> },
+  { path: 'dashboard', element: <AppPathRedirect /> },
+  { path: 'find', element: <AppPathRedirect /> },
+  { path: 'carpooling', element: <AppPathRedirect /> },
+  { path: 'bookings', element: <AppPathRedirect /> },
+  { path: 'offer', element: <AppPathRedirect /> },
+  { path: 'profile', element: <AppPathRedirect /> },
+  { path: 'map', element: <AppPathRedirect /> },
+  { path: 'driver/*', element: <AppPathRedirect /> },
+  { path: 'chat/*', element: <AppPathRedirect /> },
+  { path: 'ride-request/*', element: <AppPathRedirect /> },
+  { path: 'users/*', element: <AppPathRedirect /> }
+];
+
 export const routes = [
   {
     path: '/',
     element: <RootLayout />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-
       {
-        element: (
-          <PublicRoute>
-            <AuthLayout />
-          </PublicRoute>
-        ),
+        element: <MarketingLayout />,
         children: [
-          { path: 'login', element: <LoginPage /> },
-          { path: 'register', element: <RegisterPage /> },
-          { path: 'verify-email', element: <VerifyEmailPage /> },
-          { path: 'forgot-password', element: <ForgotPasswordPage /> },
-          { path: 'reset-password', element: <ResetPasswordPage /> }
-        ]
-      },
-
-      {
-        element: <ProtectedRoute />,
-        children: [
-          { path: 'complete-profile', element: <CompleteProfilePage /> },
-          { path: 'onboarding', element: <OnboardingPage /> },
-          { path: 'onboarding/driver-setup', element: <DriverSetupPage /> },
           {
-            element: <OnboardingGuard />,
-            children: [
-              {
-                element: <MainLayout />,
-                children: [
-                  { path: 'dashboard', element: <Dashboard /> },
-                  {
-                    path: 'find',
-                    element: (
-                      <RoleRoute allow="RIDER" redirectTo="/dashboard">
-                        <FindRide />
-                      </RoleRoute>
-                    )
-                  },
-                  {
-                    path: 'carpooling',
-                    element: (
-                      <RoleRoute allow={['RIDER', 'DRIVER']} redirectTo="/dashboard">
-                        <CarpoolingPage />
-                      </RoleRoute>
-                    )
-                  },
-                  {
-                    path: 'bookings',
-                    element: (
-                      <RoleRoute allow="RIDER" redirectTo="/dashboard">
-                        <BookingHistoryPage />
-                      </RoleRoute>
-                    )
-                  },
-                  {
-                    path: 'offer',
-                    element: (
-                      <RoleRoute allow="DRIVER" redirectTo="/dashboard">
-                        <OfferRide />
-                      </RoleRoute>
-                    )
-                  },
-                  { path: 'profile', element: <Profile /> },
-                  {
-                    path: 'driver/resubmit-documents',
-                    element: (
-                      <RoleRoute allow="DRIVER" redirectTo="/profile">
-                        <DriverResubmitDocsPage />
-                      </RoleRoute>
-                    )
-                  },
-                  { path: 'users/:userId', element: <PublicProfilePage /> },
-                  { path: 'chat/:rideId', element: <ChatPage /> },
-                  { path: 'ride-request/:requestId/chat', element: <RideRequestChatPage /> },
-                  { path: 'map', element: <MapPage /> }
-                ]
-              }
-            ]
-          }
+            index: true,
+            element: (
+              <MobileRedirect>
+                <LandingPage />
+              </MobileRedirect>
+            )
+          },
+          { path: 'about', element: <AboutPage /> },
+          { path: 'contact', element: <ContactPage /> }
         ]
       },
 
-      { path: '*', element: <Navigate to="/dashboard" replace /> }
+      { path: 'app', children: appChildren },
+
+      ...legacyAppRoutes,
+
+      { path: '*', element: <Navigate to={paths.home} replace /> }
     ]
   }
 ];

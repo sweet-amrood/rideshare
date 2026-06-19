@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   User,
   MapPin,
   Users,
-  Clock,
   CheckCircle,
   XCircle,
   Loader2,
   Inbox,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  Route
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { bookingService } from '@/api/services/booking.service';
@@ -18,6 +19,11 @@ import { getVehicleTypeLabel } from '../constants/searchByVehicleType';
 import AppButton from '@/components/common/AppButton';
 import LocationLabel from '@/components/common/LocationLabel';
 import { useActiveTrip } from '@/hooks/useActiveTrip';
+import AnimatedCard from '@/components/animations/AnimatedCard';
+import EmptyState from '@/components/animations/EmptyState';
+import { StaggerList, StaggerItem } from '@/components/animations/StaggerList';
+import { SkeletonCard } from '@/components/animations/Skeleton';
+import { paths } from '@/app/router/paths';
 
 export default function DriverRequestsPanel({ onCountChange, onBookingChanged }) {
   const [requests, setRequests] = useState([]);
@@ -64,23 +70,16 @@ export default function DriverRequestsPanel({ onCountChange, onBookingChanged })
   };
 
   if (loading) {
-    return (
-      <div className="glass-panel rounded-2xl p-12 flex justify-center border border-emerald-500/20">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
-      </div>
-    );
+    return <SkeletonCard lines={3} />;
   }
 
   if (!requests.length) {
     return (
-      <div className="glass-panel rounded-2xl p-10 text-center border border-emerald-500/20">
-        <Inbox className="h-12 w-12 text-emerald-400/50 mx-auto mb-3" />
-        <p className="font-semibold text-white">No pending requests</p>
-        <p className="text-sm text-white/60 mt-2 max-w-sm mx-auto">
-          When passengers book a seat on your published rides, you can accept or decline them
-          here.
-        </p>
-      </div>
+      <EmptyState
+        icon={Inbox}
+        title="No pending requests"
+        description="When passengers book a seat on your published rides, you can accept or decline them here."
+      />
     );
   }
 
@@ -92,14 +91,19 @@ export default function DriverRequestsPanel({ onCountChange, onBookingChanged })
           Finish your on-demand ride before accepting carpool bookings.
         </div>
       )}
+    <StaggerList className="space-y-4">
+      <AnimatePresence mode="popLayout">
       {requests.map((b) => {
         const ride = b.rideId;
         const passenger = b.passengerId;
         const busy = actingId === b._id;
+        const dist = b.distanceMeta;
 
         return (
-          <article
-            key={b._id}
+          <StaggerItem key={b._id} layout>
+          <AnimatedCard
+            as="article"
+            layout
             className="glass-panel p-5 rounded-2xl border-l-4 border-l-amber-400 border border-emerald-500/15 space-y-4"
           >
             <div className="flex flex-wrap justify-between gap-3">
@@ -125,6 +129,39 @@ export default function DriverRequestsPanel({ onCountChange, onBookingChanged })
                 </p>
               </div>
             </div>
+
+            {dist && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                <div className="rounded-lg bg-slateCustom-800/60 border border-white/10 p-2.5">
+                  <p className="text-white/50 uppercase tracking-wide text-[9px] font-bold">Their trip</p>
+                  <p className="font-bold text-white mt-0.5">
+                    {Number(dist.passengerTripKm).toFixed(1)} km
+                  </p>
+                </div>
+                <div className="rounded-lg bg-slateCustom-800/60 border border-white/10 p-2.5">
+                  <p className="text-white/50 uppercase tracking-wide text-[9px] font-bold">Route detour</p>
+                  <p className="font-bold text-amber-300 mt-0.5">
+                    +{Number(dist.routeDetourKm).toFixed(1)} km
+                  </p>
+                </div>
+                <div className="rounded-lg bg-slateCustom-800/60 border border-white/10 p-2.5">
+                  <p className="text-white/50 uppercase tracking-wide text-[9px] font-bold">
+                    From your start
+                  </p>
+                  <p className="font-bold text-white mt-0.5">
+                    {Number(dist.pickupFromOriginKm).toFixed(1)} km
+                  </p>
+                </div>
+                <div className="rounded-lg bg-slateCustom-800/60 border border-emerald-500/25 p-2.5">
+                  <p className="text-white/50 uppercase tracking-wide text-[9px] font-bold flex items-center gap-1">
+                    <Route className="h-3 w-3" /> Billable
+                  </p>
+                  <p className="font-bold text-emerald-300 mt-0.5">
+                    {dist.billableKm != null ? `${Number(dist.billableKm).toFixed(1)} km` : '—'}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {ride && (
               <div className="text-xs text-white/75 space-y-1.5 bg-brand-500/5 border border-brand-500/20 p-3 rounded-xl">
@@ -176,7 +213,7 @@ export default function DriverRequestsPanel({ onCountChange, onBookingChanged })
               {ride?._id && (
                 <Link
                   to={`/chat/${ride._id}`}
-                  state={{ from: '/carpooling', fromLabel: 'Carpooling' }}
+                  state={{ from: paths.carpooling, fromLabel: 'Carpooling' }}
                   className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl border border-brand-500/40 bg-brand-500/10 text-brand-200 text-sm font-semibold no-underline hover:bg-brand-500/20"
                 >
                   <MessageSquare className="h-4 w-4" />
@@ -208,9 +245,12 @@ export default function DriverRequestsPanel({ onCountChange, onBookingChanged })
                 Decline
               </button>
             </div>
-          </article>
+          </AnimatedCard>
+          </StaggerItem>
         );
       })}
+      </AnimatePresence>
+    </StaggerList>
     </div>
   );
 }

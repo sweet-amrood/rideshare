@@ -31,6 +31,7 @@ const getPendingSeatCount = async (rideId) => {
 };
 
 const getLiveSeatSnapshot = async (rideId) => {
+  await reconcileRideSeats(rideId);
   const ride = await Ride.findById(rideId).populate('vehicleId', 'vehicleType company model');
   if (!ride) return null;
 
@@ -59,5 +60,15 @@ const getLiveSeatSnapshot = async (rideId) => {
 module.exports = {
   reconcileRideSeats,
   getPendingSeatCount,
-  getLiveSeatSnapshot
+  getLiveSeatSnapshot,
+  attachLiveSeatFields: async (ride) => {
+    await reconcileRideSeats(ride._id);
+    const fresh = await Ride.findById(ride._id)
+      .populate('driverId', 'name rating verification profile')
+      .populate('vehicleId');
+    if (!fresh) return null;
+    const pendingSeats = await getPendingSeatCount(ride._id);
+    const summary = seatSummary(fresh, pendingSeats);
+    return { ride: fresh, seatSummary: summary, pendingSeats };
+  }
 };

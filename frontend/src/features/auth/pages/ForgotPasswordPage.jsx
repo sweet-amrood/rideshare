@@ -7,6 +7,7 @@ import AuthShell from '@/features/auth/components/AuthShell';
 import AuthTextField from '@/features/auth/components/AuthTextField';
 import AuthSubmitButton from '@/features/auth/components/AuthSubmitButton';
 import { validateEmail, hasErrors, runValidators } from '@/features/auth/utils/validation';
+import { paths } from '@/app/router/paths';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function ForgotPasswordPage() {
 
     if (res.success) {
       toast.success('If an account exists, a reset code was sent.');
-      navigate('/reset-password', { state: { email: email.trim() } });
+      navigate(paths.resetPassword, { state: { email: email.trim() } });
     } else {
       toast.error(res.error);
     }
@@ -40,7 +41,7 @@ export default function ForgotPasswordPage() {
       title="Forgot password?"
       subtitle="Enter your email and we'll send a 6-digit code to reset your password."
       footer={
-        <Link to="/login" className="text-sm font-semibold text-brand-400 hover:text-brand-300">
+        <Link to={paths.login} className="text-sm font-semibold text-brand-400 hover:text-brand-300">
           Back to sign in
         </Link>
       }

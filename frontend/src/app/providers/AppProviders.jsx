@@ -9,6 +9,7 @@ import { muiTheme } from '@/theme';
 import { initializeAuth } from '@/store/slices/authSlice';
 import { useAppDispatch } from '@/store/hooks';
 import { SocketProvider } from '@/context/SocketContext';
+import { NotificationProvider } from '@/context/NotificationContext';
 import AppRouter from '@/app/router';
 import { env } from '@/config/env';
 
@@ -32,7 +33,9 @@ export default function AppProviders() {
         <Router>
           <Bootstrap>
             <SocketProvider>
-              <AppRouter />
+              <NotificationProvider>
+                <AppRouter />
+              </NotificationProvider>
               <Toaster
                 position="top-right"
                 toastOptions={{

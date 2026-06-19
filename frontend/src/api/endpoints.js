@@ -32,6 +32,7 @@ export const endpoints = {
     estimatePrice: '/rides/estimate-price',
     myOffers: '/rides/my-offers',
     byId: (id) => `/rides/${id}`,
+    chat: (id) => `/rides/${id}/chat`,
     update: (id) => `/rides/${id}`,
     cancel: (id) => `/rides/${id}`
   },
@@ -63,9 +64,16 @@ export const endpoints = {
     liveMap: (rideId) => `/bookings/ride/${rideId}/live-map`,
     fareQuote: (rideId) => `/bookings/ride/${rideId}/fare-quote`,
     completeRide: (rideId) => `/bookings/ride/${rideId}/complete`,
+    startRide: (rideId) => `/bookings/ride/${rideId}/start`,
+    startCandidates: (rideId) => `/bookings/ride/${rideId}/start-candidates`,
     updateStatus: (id) => `/bookings/${id}/status`,
     cancel: (id) => `/bookings/${id}/cancel`,
     prepareRefund: (id) => `/bookings/${id}/refund/prepare`
+  },
+  notifications: {
+    list: '/notifications',
+    markAllRead: '/notifications/read-all',
+    markRead: (id) => `/notifications/${id}/read`
   },
   communities: '/communities',
   maps: {

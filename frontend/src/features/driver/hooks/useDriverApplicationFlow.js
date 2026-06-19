@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { finishDriverApplicationAsPassenger } from '../utils/finishDriverApplication';
+import { paths } from '@/app/router/paths';
 
 /**
  * Shared post-submit flow: passenger mode + success dialog + navigate to book rides.
@@ -20,7 +21,7 @@ export function useDriverApplicationFlow({ setUser, completeOnboarding }) {
 
   const dismissSubmittedDialog = useCallback(() => {
     setShowSubmittedDialog(false);
-    navigate('/find', { replace: true });
+    navigate(paths.find, { replace: true });
   }, [navigate]);
 
   return {

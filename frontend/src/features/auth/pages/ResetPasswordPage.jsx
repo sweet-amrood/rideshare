@@ -13,6 +13,7 @@ import {
   runValidators,
   hasErrors
 } from '@/features/auth/utils/validation';
+import { paths } from '@/app/router/paths';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function ResetPasswordPage() {
 
     if (!email) {
       toast.error('Start from forgot password to receive a code.');
-      navigate('/forgot-password');
+      navigate(paths.forgotPassword);
       return;
     }
 
@@ -50,7 +51,7 @@ export default function ResetPasswordPage() {
 
     if (res.success) {
       toast.success(res.message || 'Password updated successfully');
-      navigate('/login');
+      navigate(paths.login);
     } else {
       toast.error(res.error);
     }
@@ -69,7 +70,7 @@ export default function ResetPasswordPage() {
         )
       }
       footer={
-        <Link to="/login" className="text-sm font-semibold text-brand-400 hover:text-brand-300">
+        <Link to={paths.login} className="text-sm font-semibold text-brand-400 hover:text-brand-300">
           Back to sign in
         </Link>
       }

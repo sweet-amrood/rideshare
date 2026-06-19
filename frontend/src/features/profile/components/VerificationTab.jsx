@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
 import AppButton from '@/components/common/AppButton';
+import { paths } from '@/app/router/paths';
 import VerificationBadges from './VerificationBadges';
 import { profileService } from '@/api/services/profile.service';
 import {
@@ -188,7 +189,7 @@ export default function VerificationTab({ user, architecture, onGoToAbout, onVer
           ) : (
             <>
               <p className="text-sm text-white/80">Confirm your signup email to unlock full access.</p>
-              <Link to="/verify-email" className="text-sm font-semibold text-brand-400 no-underline">
+              <Link to={paths.verifyEmail} className="text-sm font-semibold text-brand-400 no-underline">
                 Complete email verification →
               </Link>
             </>
@@ -232,7 +233,7 @@ export default function VerificationTab({ user, architecture, onGoToAbout, onVer
                 </p>
               )}
               {isDriver && (
-                <AppButton type="button" variant="secondary" onClick={() => navigate('/driver/resubmit-documents')}>
+                <AppButton type="button" variant="secondary" onClick={() => navigate(paths.driverResubmit)}>
                   Re-upload all driver documents (wizard)
                 </AppButton>
               )}

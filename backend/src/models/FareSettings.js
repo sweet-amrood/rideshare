@@ -36,7 +36,9 @@ const FareSettingsSchema = new mongoose.Schema(
     ],
     searchWaveRadiiMeters: { type: [Number], default: [1500, 3000, 5000, 8000] },
     driverNotifyRadiusMeters: { type: Number, default: 5000 },
-    avgSpeedKmh: { type: Number, default: 22 }
+    avgSpeedKmh: { type: Number, default: 22 },
+    /** Carpool AC rides: rate × this multiplier (e.g. 1.15 = +15%) */
+    acPremiumMultiplier: { type: Number, default: 1.15 }
   },
   { timestamps: true }
 );

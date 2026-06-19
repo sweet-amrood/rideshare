@@ -17,6 +17,7 @@ import {
   hasErrors
 } from '@/features/auth/utils/validation';
 import { filterDigits, filterPersonName } from '@/utils/inputFilters';
+import { paths } from '@/app/router/paths';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ export default function RegisterPage() {
     if (res.success && res.requiresEmailVerification) {
       setMockWarning(!!res.mockSent);
       toast.success('Account created! Check your email for the verification code.');
-      navigate('/verify-email', { state: { email: res.email || email } });
+      navigate(paths.verifyEmail, { state: { email: res.email || email } });
     } else if (res.error) {
       toast.error(res.error);
     }
@@ -87,11 +88,11 @@ export default function RegisterPage() {
           : 'Welcome to Ride Share!'
       );
       if (res.requiresProfileCompletion || res.user?.profileCompleted === false) {
-        navigate('/complete-profile', { replace: true });
+        navigate(paths.completeProfile, { replace: true });
       } else if (res.user?.onboardingComplete === false) {
-        navigate('/onboarding', { replace: true });
+        navigate(paths.onboarding, { replace: true });
       } else {
-        navigate('/dashboard', { replace: true });
+        navigate(paths.dashboard, { replace: true });
       }
     } else if (res.error) {
       toast.error(res.error);
@@ -100,13 +101,13 @@ export default function RegisterPage() {
 
   return (
     <AuthShell
-      compact
+      variant="compact"
       title="Create your account"
       subtitle="Join verified carpools on your campus or workplace."
       footer={
         <p className="text-xs text-slate-400">
           Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-brand-400 hover:text-brand-300 no-underline">
+          <Link to={paths.login} className="font-semibold text-brand-400 hover:text-brand-300 no-underline">
             Sign in
           </Link>
         </p>
@@ -141,8 +142,8 @@ export default function RegisterPage() {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-2" noValidate>
-        <div className="grid grid-cols-2 gap-2">
+      <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <AuthTextField
             label="Full name"
             name="fullName"
@@ -163,7 +164,7 @@ export default function RegisterPage() {
           />
         </div>
         <AuthTextField
-          label="Mobile"
+          label="Mobile number"
           name="phone"
           type="tel"
           placeholder="+923001234567"
@@ -173,7 +174,7 @@ export default function RegisterPage() {
           error={fieldErrors.phone}
           autoComplete="tel"
         />
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <AuthPasswordField
             label="Password"
             name="password"
@@ -184,7 +185,7 @@ export default function RegisterPage() {
             autoComplete="new-password"
           />
           <AuthPasswordField
-            label="Confirm"
+            label="Confirm password"
             name="confirmPassword"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -194,7 +195,9 @@ export default function RegisterPage() {
           />
         </div>
 
-        <AuthSubmitButton loading={submitting}>Create account</AuthSubmitButton>
+        <div className="pt-1">
+          <AuthSubmitButton loading={submitting}>Create account</AuthSubmitButton>
+        </div>
       </form>
 
       <GoogleSignIn onSuccess={handleGoogle} disabled={submitting} />

@@ -34,6 +34,14 @@ const validateOfferPayload = (body) => {
     errors.push('Invalid luggage option');
   }
 
+  const sideDetour = body.restrictions?.sideDetourKm;
+  if (sideDetour != null && sideDetour !== '') {
+    const side = parseFloat(sideDetour);
+    if (!Number.isFinite(side) || side < 1 || side > 15) {
+      errors.push('Pickup/destination range must be between 1 and 15 km per side');
+    }
+  }
+
   const o = body.originCoords;
   const d = body.destinationCoords;
   if (o && d && o[0] === d[0] && o[1] === d[1]) {
