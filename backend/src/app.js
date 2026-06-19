@@ -28,7 +28,7 @@ function parseCorsOrigins() {
     .filter(Boolean);
 
   if (process.env.NODE_ENV !== 'production') {
-    origins.push('http://localhost:3000', 'http://127.0.0.1:3000');
+    origins.push('http://localhost:3000', 'http://127.0.0.1:3000', 'https://ride-pooling.netlify.app');
   }
 
   return [...new Set(origins)];
