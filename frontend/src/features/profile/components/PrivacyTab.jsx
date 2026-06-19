@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Switch from '@mui/material/Switch';
 import AppButton from '@/components/common/AppButton';
+import ModeSwitcher from '@/components/common/ModeSwitcher';
 import { profileService } from '@/api/services/profile.service';
 
 const rowSx = {
@@ -76,6 +77,10 @@ export default function PrivacyTab({ user }) {
       <AppButton onClick={handleSave} disabled={saving}>
         {saving ? 'Saving...' : 'Save privacy'}
       </AppButton>
+
+      <div className="pt-6 border-t border-white/[0.06]">
+        <ModeSwitcher variant="settings" />
+      </div>
     </div>
   );
 }

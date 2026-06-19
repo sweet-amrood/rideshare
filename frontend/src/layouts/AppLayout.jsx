@@ -25,6 +25,7 @@ import { isDriver } from '@/utils/roles';
 import { getUserAvatarUrl } from '@/utils/defaultAvatar';
 import DemoModeBanner from '@/components/common/DemoModeBanner';
 import NotificationBell from '@/components/layout/NotificationBell';
+import ModeSwitcher from '@/components/common/ModeSwitcher';
 import { paths } from '@/app/router/paths';
 import { StaggerList, StaggerItem } from '@/components/animations/StaggerList';
 import { springGentle } from '@/animations/motionConfig';
@@ -62,7 +63,7 @@ const mobileNavClass = (item) => ({ isActive }) => {
   }`;
 };
 
-export default function MainLayout() {
+export default function AppLayout() {
   const { user, logout, setUser } = useAuth();
   const { navItems } = useRoles();
   const navigate = useNavigate();
@@ -305,6 +306,7 @@ export default function MainLayout() {
                   <Zap className="h-3 w-3 text-brand-400" />
                   <span className="text-brand-300">Live</span>
                 </div>
+                <ModeSwitcher variant="compact" className="hidden sm:flex" />
                 <NotificationBell />
               </div>
             </div>

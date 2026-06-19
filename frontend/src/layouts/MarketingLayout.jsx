@@ -1,7 +1,14 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Suspense } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { Car } from 'lucide-react';
 import { paths } from '@/app/router/paths';
 import AppButton from '@/components/common/AppButton';
+import ModeSwitcher from '@/components/common/ModeSwitcher';
+import PageTransition from '@/components/common/PageTransition';
+import MarketingPageLoader from '@/components/common/MarketingPageLoader';
+import useUserMode from '@/hooks/useUserMode';
+import { useAuth } from '@/hooks/useAuth';
 
 const NAV = [
   { to: paths.home, label: 'Home', end: true },
@@ -11,6 +18,15 @@ const NAV = [
 
 export default function MarketingLayout() {
   const location = useLocation();
+  const { setMode, USER_MODES } = useUserMode();
+  const navigate = useNavigate();
+  const { user, token, isInitialized } = useAuth();
+  const isLoggedIn = Boolean(isInitialized && (user || token));
+
+  const openApp = () => {
+    setMode(USER_MODES.APP);
+    navigate(isLoggedIn ? paths.dashboard : paths.app);
+  };
 
   return (
     <div className="min-h-screen bg-slateCustom-900 text-white flex flex-col bg-grid">
@@ -47,26 +63,35 @@ export default function MarketingLayout() {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Link to={paths.login} className="hidden sm:inline-flex no-underline">
-              <AppButton variant="ghost" size="sm">
-                Sign in
-              </AppButton>
-            </Link>
-            <Link to={paths.app} className="no-underline">
-              <AppButton size="sm">Open app</AppButton>
-            </Link>
+            <ModeSwitcher variant="compact" className="hidden sm:flex" />
+            {!isLoggedIn && (
+              <Link to={paths.login} className="hidden md:inline-flex no-underline">
+                <AppButton variant="ghost" size="sm">
+                  Sign in
+                </AppButton>
+              </Link>
+            )}
+            <AppButton type="button" size="sm" onClick={openApp}>
+              {isLoggedIn ? 'Open dashboard' : 'Open app'}
+            </AppButton>
           </div>
         </div>
       </header>
 
       <main className="flex-1">
-        <Outlet />
+        <AnimatePresence mode="wait">
+          <PageTransition key={location.pathname}>
+            <Suspense fallback={<MarketingPageLoader />}>
+              <Outlet />
+            </Suspense>
+          </PageTransition>
+        </AnimatePresence>
       </main>
 
       <footer className="border-t border-white/[0.06] py-8 px-4">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
           <p>© {new Date().getFullYear()} Ride Share · Commuter Hub</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             <Link to={paths.about} className="text-white/50 hover:text-white no-underline">
               About
             </Link>
