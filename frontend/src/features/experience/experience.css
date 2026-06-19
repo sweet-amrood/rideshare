@@ -118,7 +118,7 @@
   position: absolute;
   z-index: 20;
   left: clamp(20px, 7vw, 110px);
-  top: 16%;
+  top: 8.5%;
   max-width: min(560px, 80vw);
   pointer-events: none;
 }
@@ -160,60 +160,118 @@
   color: transparent;
 }
 
-/* ── CARS (DOM elements, transform-animated) ── */
+/* ── CARS (transparent wrappers holding an SVG sprite, facing right) ── */
 .xj-car {
   position: absolute;
-  width: 48px;
-  height: 22px;
-  border-radius: 8px;
+  width: 60px;
+  height: 30px;
   will-change: transform;
   transform: translateZ(0);
-  box-shadow:
-    0 8px 18px -6px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
-.xj-car::before {
-  content: '';
-  position: absolute;
-  inset: 3px 12px auto 12px;
-  height: 9px;
-  border-radius: 4px;
-  background: rgba(8, 12, 22, 0.55);
-}
-.xj-car::after {
-  content: '';
-  position: absolute;
-  left: -7px;
-  top: 50%;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.45);
-  opacity: 0.65;
+.xj-car svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
 }
 
-.xj-car--brand {
-  background: linear-gradient(135deg, #5b69f5, #7c3aed);
+/* ── HERO CAR LAYER (continuous narrative vehicle) ── */
+.xj-herolayer {
+  position: absolute;
+  inset: 0;
+  z-index: 16;
+  pointer-events: none;
 }
-.xj-car--cyan {
-  background: linear-gradient(135deg, #22d3ee, #3b82f6);
+.xj-herocar {
+  position: absolute;
+  left: 0;
+  top: 61%;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  will-change: transform, opacity;
 }
-.xj-car--violet {
-  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+.xj-herocar .xj-car {
+  left: -30px;
+  top: -15px;
 }
-.xj-car--amber {
-  background: linear-gradient(135deg, #fbbf24, #f97316);
+.xj-pax {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #04141d;
+  background: linear-gradient(135deg, #67e8f9, #4f8ff5);
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.16), 0 0 18px rgba(34, 211, 238, 0.5);
+  opacity: 0;
+  will-change: transform, opacity;
 }
-.xj-car--rose {
-  background: linear-gradient(135deg, #fb7185, #e11d48);
+.xj-pax::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(34, 211, 238, 0.5);
+  animation: xj-ping 1.7s ease-out infinite;
 }
-.xj-car--slate {
-  background: linear-gradient(135deg, #64748b, #475569);
+@keyframes xj-ping {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
 }
-.xj-car--emerald {
-  background: linear-gradient(135deg, #34d399, #10b981);
+.xj-pax--a {
+  left: 92px;
+  top: -54px;
+}
+.xj-pax--b {
+  left: 118px;
+  top: 26px;
+}
+.xj-conn {
+  position: absolute;
+  height: 2px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(34, 211, 238, 0.95) 0 6px,
+    transparent 6px 12px
+  );
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.xj-conn--a {
+  left: 14px;
+  top: -8px;
+  width: 92px;
+}
+.xj-conn--b {
+  left: 16px;
+  top: 6px;
+  width: 116px;
+}
+.xj-seatdot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+}
+.xj-seatdot--a {
+  left: -10px;
+  top: -22px;
+}
+.xj-seatdot--b {
+  left: 0;
+  top: -22px;
 }
 
 /* ── NODES + ROUTES (scene 2/3/4/5) ── */
@@ -340,66 +398,6 @@
 .xj-topbar > * {
   pointer-events: auto;
 }
-.xj-progress-wrap {
-  position: absolute;
-  left: clamp(16px, 4vw, 40px);
-  right: clamp(16px, 4vw, 40px);
-  bottom: 26px;
-}
-.xj-progress-track {
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-.xj-progress-bar {
-  height: 100%;
-  width: 100%;
-  transform: scaleX(0);
-  transform-origin: left center;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #4f5ef4, #22d3ee);
-}
-.xj-progress-dots {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-}
-.xj-dot {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.32);
-  transition: color 0.3s ease;
-}
-.xj-dot::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-}
-.xj-dot.is-active {
-  color: #fff;
-}
-.xj-dot.is-active::before {
-  background: #22d3ee;
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.8);
-}
-.xj-dot-label {
-  display: none;
-}
-@media (min-width: 900px) {
-  .xj-dot-label {
-    display: inline;
-  }
-}
-
 .xj-scroll-hint {
   position: absolute;
   right: clamp(16px, 4vw, 40px);
@@ -456,6 +454,7 @@
   min-height: 92vh;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
-.xj-reduced .xj-scroll-hint {
+.xj-reduced .xj-scroll-hint,
+.xj-reduced .xj-herolayer {
   display: none;
 }

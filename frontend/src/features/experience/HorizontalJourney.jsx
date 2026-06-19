@@ -1,10 +1,10 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useReducedMotion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
-import { ArrowRight, Car, MousePointer2, X } from 'lucide-react';
+import { ArrowRight, Car, MousePointer2, User, X } from 'lucide-react';
 import { paths } from '@/app/router/paths';
 import AppButton from '@/components/common/AppButton';
 import useUserMode from '@/hooks/useUserMode';
@@ -14,26 +14,41 @@ import './experience.css';
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
 const SCENES = [
-  { id: 0, label: 'City' },
-  { id: 1, label: 'Chaos' },
-  { id: 2, label: 'Activate' },
-  { id: 3, label: 'Match' },
+  { id: 0, label: 'The City' },
+  { id: 1, label: 'Congestion' },
+  { id: 2, label: 'The Network' },
+  { id: 3, label: 'Matching' },
   { id: 4, label: 'Carpool' },
-  { id: 5, label: 'Optimize' },
+  { id: 5, label: 'Optimized' },
   { id: 6, label: 'Launch' }
 ];
 
-const CAR_COLORS = ['brand', 'cyan', 'violet', 'amber', 'rose', 'slate', 'emerald'];
+const PALETTE = {
+  brand: ['#7c8bff', '#4f46e5'],
+  cyan: ['#5fe3f5', '#0ea5c4'],
+  violet: ['#b69cff', '#7c3aed'],
+  amber: ['#fbcf5a', '#f59e0b'],
+  rose: ['#fb8aa0', '#e11d48'],
+  slate: ['#8c9bb5', '#475569'],
+  emerald: ['#5fe0ac', '#10b981']
+};
 
-/** Scattered cars for the chaos scene. */
+const CAR_KEYS = Object.keys(PALETTE);
+
+/** Scattered, road-aligned cars for the congestion scene. */
 const CHAOS_CARS = Array.from({ length: 9 }).map((_, i) => ({
-  color: CAR_COLORS[i % CAR_COLORS.length],
-  left: 6 + (i % 5) * 19 + (i % 2 ? 4 : -3),
-  top: 44 + ((i * 37) % 28),
-  scale: 0.82 + ((i * 13) % 5) / 10
+  color: CAR_KEYS[i % CAR_KEYS.length],
+  left: 6 + (i % 5) * 19 + (i % 2 ? 3 : -2),
+  top: 57 + ((i * 31) % 10)
 }));
 
-/** City skyline blocks shared across the opening scenes. */
+/** A few calm cars on the road after optimisation ("less chaos"). */
+const AMBIENT_CARS = [
+  { color: 'slate', left: 18, top: 58 },
+  { color: 'cyan', left: 44, top: 63 },
+  { color: 'violet', left: 72, top: 59 }
+];
+
 const BLOCKS = [
   { left: 8, w: 46, h: 150 },
   { left: 15, w: 70, h: 220 },
@@ -46,13 +61,50 @@ const BLOCKS = [
   { left: 90, w: 48, h: 130 }
 ];
 
-function SceneCaption({ index, title, sub, accent }) {
+/** Side-view car sprite, headlight forward (right) in the direction of travel. */
+function CarSvg({ color = 'brand' }) {
+  const uid = useId().replace(/:/g, '');
+  const [c1, c2] = PALETTE[color] || PALETTE.brand;
+  const gid = `xjcar-${uid}`;
+  return (
+    <svg viewBox="0 0 60 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={c1} />
+          <stop offset="1" stopColor={c2} />
+        </linearGradient>
+      </defs>
+      <ellipse cx="30" cy="26.5" rx="23" ry="2.6" fill="rgba(0,0,0,0.32)" />
+      <path
+        d="M4 18 Q4 13 10 12 L17 7.5 Q20 5.5 26 5.5 L40 5.5 Q46 5.5 49 9.5 L54 12.5 Q57 13.5 57 17 L57 19.5 Q57 22 53.5 22 L7 22 Q4 22 4 19 Z"
+        fill={`url(#${gid})`}
+        stroke="rgba(255,255,255,0.28)"
+        strokeWidth="0.6"
+      />
+      <path d="M19 9 L25 9 L25 12.5 L15.5 12.5 Z" fill="rgba(7,11,20,0.6)" />
+      <path d="M27 9 L39 9 Q43 9 45.5 12 L27 12 Z" fill="rgba(7,11,20,0.6)" />
+      <circle cx="53.5" cy="15" r="1.7" fill="#fff7d6" />
+      <rect x="4.5" y="14" width="2.2" height="3.2" rx="1" fill="#ff7676" />
+      <circle cx="18" cy="22" r="4.7" fill="#0b0f1a" stroke="#39456a" strokeWidth="1.6" />
+      <circle cx="43" cy="22" r="4.7" fill="#0b0f1a" stroke="#39456a" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function Vehicle({ color, className = '', style }) {
+  return (
+    <div className={`xj-car ${className}`} style={style}>
+      <CarSvg color={color} />
+    </div>
+  );
+}
+
+function SceneCaption({ index, title, sub }) {
   return (
     <div className="xj-caption">
       <span className="xj-eyebrow">{`0${index} — ${SCENES[index].label}`}</span>
       <h2 className="xj-title">{title}</h2>
       <p className="xj-sub">{sub}</p>
-      {accent}
     </div>
   );
 }
@@ -68,8 +120,7 @@ export default function HorizontalJourney() {
   const viewportRef = useRef(null);
   const worldRef = useRef(null);
   const bgRef = useRef(null);
-  const progressRef = useRef(null);
-  const [active, setActive] = useState(0);
+  const heroRef = useRef(null);
 
   const openApp = () => {
     setMode(USER_MODES.APP);
@@ -80,17 +131,49 @@ export default function HorizontalJourney() {
 
   useLayoutEffect(() => {
     if (reduceMotion) return undefined;
-    const lastIdx = { value: -1 };
 
     const ctx = gsap.context(() => {
       const q = gsap.utils.selector(rootRef);
       const world = worldRef.current;
+      const hero = heroRef.current;
+      const vw = (n) => (window.innerWidth * n) / 100;
       const distance = () => Math.max(0, world.offsetWidth - window.innerWidth);
 
-      // ── The camera: scroll drives horizontal travel ──
-      const horizontal = gsap.to(world, {
-        x: () => -distance(),
-        ease: 'none',
+      // ── Initial states ──
+      gsap.set(hero, { x: vw(-16), autoAlpha: 0 });
+      gsap.set(q('.xj-conn--a'), { rotation: -28, scaleX: 0, transformOrigin: 'left center' });
+      gsap.set(q('.xj-conn--b'), { rotation: 12, scaleX: 0, transformOrigin: 'left center' });
+
+      // ── Ambient loops (scroll-independent, run continuously) ──
+      q('.xj-chaos-car').forEach((car, i) => {
+        gsap.to(car, {
+          x: `+=${gsap.utils.random(-110, 110)}`,
+          y: `+=${gsap.utils.random(-10, 10)}`,
+          duration: gsap.utils.random(1.8, 3.4),
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+          delay: i * 0.12
+        });
+      });
+      q('.xj-scene-2 .xj-node.is-hub').forEach((hub) => {
+        gsap.to(hub, { scale: 1.18, repeat: -1, yoyo: true, duration: 1.3, ease: 'sine.inOut' });
+      });
+      q('.xj-amb-car').forEach((car, i) => {
+        gsap.to(car, {
+          x: '+=24',
+          repeat: -1,
+          yoyo: true,
+          duration: gsap.utils.random(1.6, 2.4),
+          delay: i * 0.2,
+          ease: 'sine.inOut'
+        });
+      });
+
+      // ── ONE master timeline drives camera + scenes + hero car together ──
+      // Timeline time == scene index (scroll 0→1 maps to t 0→6).
+      const tl = gsap.timeline({
+        defaults: { ease: 'none' },
         scrollTrigger: {
           trigger: viewportRef.current,
           start: 'top top',
@@ -98,189 +181,75 @@ export default function HorizontalJourney() {
           pin: true,
           scrub: 1,
           anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate: (st) => {
-            if (progressRef.current) gsap.set(progressRef.current, { scaleX: st.progress });
-            const idx = Math.round(st.progress * (total - 1));
-            if (idx !== lastIdx.value) {
-              lastIdx.value = idx;
-              setActive(idx);
-            }
-          }
-        }
-      });
-
-      // Subtle parallax: background drifts a touch slower than scenes.
-      gsap.to(bgRef.current, {
-        x: () => distance() * 0.06,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: viewportRef.current,
-          start: 'top top',
-          end: () => '+=' + distance(),
-          scrub: true,
           invalidateOnRefresh: true
         }
       });
 
-      const inScene = (sel, opts = {}) => ({
-        trigger: q(sel)[0],
-        containerAnimation: horizontal,
-        start: opts.start || 'left 82%',
-        end: opts.end || 'left 28%',
-        scrub: opts.scrub ?? true,
-        toggleActions: opts.toggleActions
-      });
+      // Camera + parallax span the full timeline
+      tl.to(world, { x: () => -distance(), duration: 6 }, 0);
+      tl.fromTo(bgRef.current, { x: 0 }, { x: () => distance() * 0.06, duration: 6 }, 0);
 
-      // ── Scene 0 · Empty City — skyline rises gently ──
-      gsap.from(q('.xj-scene-0 .xj-block'), {
-        yPercent: 22,
-        opacity: 0,
-        stagger: 0.04,
-        scrollTrigger: inScene('.xj-scene-0')
-      });
-
-      // ── Scene 1 · Chaos — ambient random wandering ──
-      q('.xj-chaos-car').forEach((car, i) => {
-        gsap.to(car, {
-          x: `+=${gsap.utils.random(-140, 140)}`,
-          y: `+=${gsap.utils.random(-46, 46)}`,
-          rotation: gsap.utils.random(-4, 4),
-          duration: gsap.utils.random(1.8, 3.6),
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-          delay: i * 0.12
-        });
-      });
-      gsap.from(q('.xj-chaos-car'), {
-        opacity: 0,
-        scale: 0.4,
-        stagger: 0.05,
-        scrollTrigger: inScene('.xj-scene-1', { end: 'left 45%' })
-      });
-
-      // ── Scene 2 · System Activation — nodes + predicted routes ──
-      gsap.from(q('.xj-scene-2 .xj-node'), {
-        scale: 0,
-        opacity: 0,
-        stagger: 0.06,
-        scrollTrigger: inScene('.xj-scene-2')
-      });
-      gsap.from(q('.xj-scene-2 .xj-route'), {
-        scaleX: 0,
-        opacity: 0,
-        stagger: 0.05,
-        scrollTrigger: inScene('.xj-scene-2', { start: 'left 70%', end: 'left 24%' })
-      });
-      q('.xj-scene-2 .xj-node.is-hub').forEach((hub) => {
-        gsap.to(hub, { scale: 1.18, repeat: -1, yoyo: true, duration: 1.3, ease: 'sine.inOut' });
-      });
-
-      // ── Scene 3 · Ride Matching — connectors pulse, cars hold lanes ──
-      gsap.from(q('.xj-scene-3 .xj-route--match'), {
-        scaleX: 0,
-        opacity: 0,
-        stagger: 0.08,
-        scrollTrigger: inScene('.xj-scene-3')
-      });
-      q('.xj-scene-3 .xj-route--match').forEach((r, i) => {
-        gsap.to(r, {
-          opacity: 0.35,
-          repeat: -1,
-          yoyo: true,
-          duration: 0.9,
-          delay: i * 0.15,
-          ease: 'sine.inOut'
-        });
-      });
-      q('.xj-scene-3 .xj-car').forEach((car, i) => {
-        gsap.to(car, {
-          x: '+=22',
-          repeat: -1,
-          yoyo: true,
-          duration: gsap.utils.random(1.4, 2.2),
-          delay: i * 0.1,
-          ease: 'sine.inOut'
-        });
-      });
-
-      // ── Scene 4 · Carpool Formation — cars converge into pods ──
-      q('.xj-converge').forEach((car) => {
-        gsap.to(car, {
-          x: parseFloat(car.dataset.x || '0'),
-          y: parseFloat(car.dataset.y || '0'),
-          scrollTrigger: inScene('.xj-scene-4', { start: 'left 78%', end: 'center center' })
-        });
-      });
-      gsap.to(q('.xj-redundant'), {
-        opacity: 0,
-        scale: 0.5,
-        scrollTrigger: inScene('.xj-scene-4', { start: 'left 60%', end: 'center 40%' })
-      });
-      gsap.from(q('.xj-scene-4 .xj-pod-ring'), {
-        scale: 0,
-        opacity: 0,
-        stagger: 0.1,
-        scrollTrigger: inScene('.xj-scene-4', { start: 'left 55%', end: 'center 35%' })
-      });
-
-      // ── Scene 5 · Optimization — noise fades, one clean route remains ──
-      gsap.to(q('.xj-scene-5 .xj-route--ghost'), {
-        opacity: 0,
-        scrollTrigger: inScene('.xj-scene-5', { start: 'left 80%', end: 'center center' })
-      });
-      gsap.from(q('.xj-scene-5 .xj-route--clean'), {
-        scaleX: 0,
-        scrollTrigger: inScene('.xj-scene-5', { start: 'left 70%', end: 'center 35%' })
-      });
-      q('.xj-glide').forEach((car, i) => {
-        gsap.to(car, {
-          x: '+=46',
-          repeat: -1,
-          yoyo: true,
-          duration: 2.2,
-          delay: i * 0.18,
-          ease: 'sine.inOut'
-        });
-      });
-
-      // ── Scene 6 · Hero Outcome — reveal + count up ──
-      gsap.from(q('.xj-hero > *'), {
-        y: 30,
-        opacity: 0,
-        stagger: 0.12,
-        duration: 0.8,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: q('.xj-scene-6')[0],
-          containerAnimation: horizontal,
-          start: 'left 55%',
-          toggleActions: 'play none none reverse'
-        }
-      });
+      // Scene reveals (placed near each scene's centre time)
+      tl.from(q('.xj-scene-0 .xj-block'), { yPercent: 22, opacity: 0, stagger: 0.04, duration: 0.6 }, 0);
+      tl.from(q('.xj-chaos-car'), { opacity: 0, scale: 0.4, stagger: 0.04, duration: 0.5 }, 0.5);
+      tl.from(q('.xj-scene-2 .xj-node'), { scale: 0, opacity: 0, stagger: 0.05, duration: 0.5 }, 1.5);
+      tl.from(
+        q('.xj-scene-2 .xj-route'),
+        { scaleX: 0, opacity: 0, transformOrigin: 'left center', stagger: 0.04, duration: 0.5 },
+        1.7
+      );
+      tl.from(q('.xj-amb-car'), { opacity: 0, x: -40, stagger: 0.1, duration: 0.5 }, 3.5);
+      tl.to(q('.xj-scene-5 .xj-route--ghost'), { opacity: 0, duration: 0.6 }, 4.5);
+      tl.from(
+        q('.xj-scene-5 .xj-route--clean'),
+        { scaleX: 0, transformOrigin: 'left center', duration: 0.6 },
+        4.7
+      );
+      tl.from(
+        q('.xj-hero > *'),
+        { y: 30, opacity: 0, stagger: 0.1, duration: 0.5, ease: 'power3.out' },
+        5.4
+      );
       q('.xj-stat-num').forEach((el) => {
         const targetValue = parseFloat(el.dataset.value);
         const decimals = parseInt(el.dataset.decimals || '0', 10);
         const suffix = el.dataset.suffix || '';
         const proxy = { v: 0 };
-        gsap.to(proxy, {
-          v: targetValue,
-          duration: 1.6,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: q('.xj-scene-6')[0],
-            containerAnimation: horizontal,
-            start: 'left 50%',
-            toggleActions: 'play none none reverse'
+        tl.to(
+          proxy,
+          {
+            v: targetValue,
+            duration: 0.6,
+            onUpdate: () => {
+              el.textContent = proxy.v.toFixed(decimals) + suffix;
+            }
           },
-          onUpdate: () => {
-            el.textContent = proxy.v.toFixed(decimals) + suffix;
-          }
-        });
+          5.4
+        );
       });
 
-      // Layout settles (fonts/images) → recalc trigger positions.
+      // ── Hero car beats (same timeline → always in sync, never rewinds) ──
+      tl.to(hero, { x: () => vw(18), autoAlpha: 1, duration: 0.6, ease: 'power1.out' }, 0.4);
+      tl.to(hero, { x: () => vw(46), duration: 1.2 }, 1.0);
+      // riders matched: pins + connectors appear as the car enters scene 3
+      tl.to(q('.xj-pax'), { autoAlpha: 1, duration: 0.4, ease: 'power1.out' }, 2.2);
+      tl.to(q('.xj-conn--a'), { scaleX: 1, autoAlpha: 1, duration: 0.4, ease: 'power1.out' }, 2.2);
+      tl.to(q('.xj-conn--b'), { scaleX: 1, autoAlpha: 1, duration: 0.4, ease: 'power1.out' }, 2.35);
+      // car slows and stops at centre
+      tl.to(hero, { x: () => vw(50), duration: 0.8, ease: 'power2.out' }, 2.2);
+      // rider one hops in
+      tl.to(q('.xj-pax--a'), { x: -92, y: 54, scale: 0.15, autoAlpha: 0, duration: 0.3, ease: 'power2.in' }, 3.0);
+      tl.to(q('.xj-conn--a'), { autoAlpha: 0, duration: 0.2 }, 3.0);
+      tl.to(q('.xj-seatdot--a'), { backgroundColor: '#34d399', boxShadow: '0 0 10px #34d399', duration: 0.2 }, 3.2);
+      // rider two hops in (carpool formed)
+      tl.to(q('.xj-pax--b'), { x: -118, y: -26, scale: 0.15, autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, 3.45);
+      tl.to(q('.xj-conn--b'), { autoAlpha: 0, duration: 0.2 }, 3.45);
+      tl.to(q('.xj-seatdot--b'), { backgroundColor: '#34d399', boxShadow: '0 0 10px #34d399', duration: 0.2 }, 3.65);
+      // carpool rolls on, then glides onto the clean route, then exits
+      tl.to(hero, { x: () => vw(56), duration: 0.9 }, 3.9);
+      tl.to(hero, { x: () => vw(62), duration: 1.0 }, 4.7);
+      tl.to(hero, { x: () => vw(90), autoAlpha: 0, duration: 0.5, ease: 'power1.in' }, 5.5);
+
       const refresh = () => ScrollTrigger.refresh();
       window.requestAnimationFrame(refresh);
       window.addEventListener('load', refresh);
@@ -320,19 +289,6 @@ export default function HorizontalJourney() {
             <span>Scroll to travel</span>
           </div>
         )}
-
-        <div className="xj-progress-wrap">
-          <div className="xj-progress-track">
-            <div ref={progressRef} className="xj-progress-bar" />
-          </div>
-          <div className="xj-progress-dots">
-            {SCENES.map((s) => (
-              <span key={s.id} className={`xj-dot ${active >= s.id ? 'is-active' : ''}`}>
-                <span className="xj-dot-label">{s.label}</span>
-              </span>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ── Pinned camera viewport ── */}
@@ -348,16 +304,16 @@ export default function HorizontalJourney() {
             </div>
           </div>
 
-          {/* Scene 0 · Empty City */}
+          {/* Scene 0 · The City */}
           <section className="xj-scene xj-scene-0">
             <SceneCaption
               index={0}
               title={
                 <>
-                  An ordinary <span className="xj-grad">commute.</span>
+                  Every journey <span className="xj-grad">starts alone.</span>
                 </>
               }
-              sub="A quiet city grid. Roads laid out, destinations set — but no one is moving together yet."
+              sub="A connected city grid — yet thousands of commuters still set out separately, on routes that quietly overlap."
             />
             <div className="xj-stage">
               {BLOCKS.map((b, i) => (
@@ -370,60 +326,61 @@ export default function HorizontalJourney() {
             </div>
           </section>
 
-          {/* Scene 1 · Chaos Travel */}
+          {/* Scene 1 · Congestion */}
           <section className="xj-scene xj-scene-1">
             <SceneCaption
               index={1}
               title={
                 <>
-                  Everyone drives <span className="xj-grad">alone.</span>
+                  Too many cars. <span className="xj-grad">Too few seats.</span>
                 </>
               }
-              sub="Thousands of overlapping trips. Empty seats everywhere. Traffic, cost, and emissions pile up."
+              sub="Solo trips multiply traffic, cost, and emissions. The roads are full — but the cars are nearly empty."
             />
             <div className="xj-stage">
               {CHAOS_CARS.map((c, i) => (
-                <div
+                <Vehicle
                   key={i}
-                  className={`xj-car xj-chaos-car xj-car--${c.color}`}
-                  style={{ left: `${c.left}%`, top: `${c.top}%`, scale: c.scale }}
+                  color={c.color}
+                  className="xj-chaos-car"
+                  style={{ left: `${c.left}%`, top: `${c.top}%` }}
                 />
               ))}
             </div>
           </section>
 
-          {/* Scene 2 · System Activation */}
+          {/* Scene 2 · The Network */}
           <section className="xj-scene xj-scene-2">
             <SceneCaption
               index={2}
               title={
                 <>
-                  The network <span className="xj-grad">wakes up.</span>
+                  Ride Share maps <span className="xj-grad">every route.</span>
                 </>
               }
-              sub="Ride Share maps the grid in real time — predicting routes and surfacing every shared path."
+              sub="Our engine reads the city in real time — predicting paths and surfacing commuters already heading the same way."
             />
             <div className="xj-stage">
-              <div className="xj-node is-hub" style={{ left: '48%', top: '58%' }} />
+              <div className="xj-node is-hub" style={{ left: '48%', top: '56%' }} />
               {[
-                [20, 46],
+                [20, 50],
                 [32, 64],
-                [40, 40],
-                [58, 70],
-                [64, 48],
-                [74, 62],
+                [40, 44],
+                [58, 66],
+                [64, 50],
+                [74, 60],
                 [84, 52],
-                [28, 54],
-                [54, 44]
+                [28, 56],
+                [54, 46]
               ].map(([l, t], i) => (
                 <div key={i} className="xj-node" style={{ left: `${l}%`, top: `${t}%` }} />
               ))}
               {[
-                { left: 20, top: 46, w: 300 },
+                { left: 20, top: 50, w: 300 },
                 { left: 32, top: 64, w: 260 },
-                { left: 54, top: 44, w: 220 },
-                { left: 58, top: 70, w: 240 },
-                { left: 64, top: 48, w: 200 }
+                { left: 54, top: 46, w: 220 },
+                { left: 58, top: 66, w: 240 },
+                { left: 64, top: 50, w: 200 }
               ].map((r, i) => (
                 <div
                   key={i}
@@ -434,89 +391,58 @@ export default function HorizontalJourney() {
             </div>
           </section>
 
-          {/* Scene 3 · Ride Matching */}
+          {/* Scene 3 · Matching (hero car + riders connect here) */}
           <section className="xj-scene xj-scene-3">
             <SceneCaption
               index={3}
               title={
                 <>
-                  Riders <span className="xj-grad">matched</span> live.
+                  Riders matched <span className="xj-grad">in real time.</span>
                 </>
               }
-              sub="People heading the same way are paired instantly — by route, timing, and direction."
+              sub="We pair people by route, direction, and timing — then connect them to a driver already on the way."
             />
-            <div className="xj-stage">
-              {[
-                { left: 22, top: 50, color: 'cyan' },
-                { left: 30, top: 50, color: 'brand' },
-                { left: 52, top: 62, color: 'violet' },
-                { left: 60, top: 62, color: 'amber' },
-                { left: 74, top: 46, color: 'emerald' },
-                { left: 82, top: 46, color: 'rose' }
-              ].map((c, i) => (
-                <div
-                  key={i}
-                  className={`xj-car xj-car--${c.color}`}
-                  style={{ left: `${c.left}%`, top: `${c.top}%` }}
-                />
-              ))}
-              {[
-                { left: 24, top: 53, w: 110 },
-                { left: 54, top: 65, w: 110 },
-                { left: 76, top: 49, w: 110 }
-              ].map((r, i) => (
-                <div
-                  key={i}
-                  className="xj-route xj-route--match"
-                  style={{ left: `${r.left}%`, top: `${r.top}%`, width: `${r.w}px` }}
-                />
-              ))}
-            </div>
           </section>
 
-          {/* Scene 4 · Carpool Formation */}
+          {/* Scene 4 · Carpool */}
           <section className="xj-scene xj-scene-4">
             <SceneCaption
               index={4}
               title={
                 <>
-                  Carpools <span className="xj-grad">form.</span>
+                  Seats fill. <span className="xj-grad">Trips combine.</span>
                 </>
               }
-              sub="Matched riders merge into shared trips. Redundant cars drop away as pods come together."
+              sub="Matched riders share a single vehicle. Fewer cars on the road, fuller seats, lower cost for everyone."
             />
             <div className="xj-stage">
-              <div className="xj-pod-ring" style={{ left: '30%', top: '46%' }} />
-              <div className="xj-pod-ring" style={{ left: '64%', top: '60%' }} />
-              {/* pod A */}
-              <div className="xj-car xj-converge xj-car--brand" data-x="60" data-y="0" style={{ left: '24%', top: '50%' }} />
-              <div className="xj-car xj-converge xj-car--cyan" data-x="0" data-y="-6" style={{ left: '34%', top: '46%' }} />
-              {/* pod B */}
-              <div className="xj-car xj-converge xj-car--violet" data-x="40" data-y="4" style={{ left: '60%', top: '62%' }} />
-              <div className="xj-car xj-converge xj-car--emerald" data-x="-10" data-y="0" style={{ left: '70%', top: '64%' }} />
-              {/* redundant cars that fade out */}
-              <div className="xj-car xj-redundant xj-car--slate" style={{ left: '46%', top: '40%' }} />
-              <div className="xj-car xj-redundant xj-car--rose" style={{ left: '52%', top: '72%' }} />
-              <div className="xj-car xj-redundant xj-car--amber" style={{ left: '82%', top: '44%' }} />
+              {AMBIENT_CARS.map((c, i) => (
+                <Vehicle
+                  key={i}
+                  color={c.color}
+                  className="xj-amb-car"
+                  style={{ left: `${c.left}%`, top: `${c.top}%` }}
+                />
+              ))}
             </div>
           </section>
 
-          {/* Scene 5 · Optimization */}
+          {/* Scene 5 · Optimized */}
           <section className="xj-scene xj-scene-5">
             <SceneCaption
               index={5}
               title={
                 <>
-                  One <span className="xj-grad">clean</span> route.
+                  One efficient, <span className="xj-grad">shared route.</span>
                 </>
               }
-              sub="The noise resolves into an optimized path. Fewer cars, full seats, smooth flow."
+              sub="Redundant trips disappear. What remains is a clean, optimized journey that keeps the city moving."
             />
             <div className="xj-stage">
               {[
-                { left: 18, top: 44, w: 180 },
+                { left: 18, top: 48, w: 180 },
                 { left: 40, top: 70, w: 160 },
-                { left: 66, top: 40, w: 200 }
+                { left: 66, top: 44, w: 200 }
               ].map((r, i) => (
                 <div
                   key={i}
@@ -526,11 +452,8 @@ export default function HorizontalJourney() {
               ))}
               <div
                 className="xj-route xj-route--clean"
-                style={{ left: '16%', top: '57%', width: '64%' }}
+                style={{ left: '16%', top: '61%', width: '64%' }}
               />
-              <div className="xj-car xj-glide xj-car--brand" style={{ left: '22%', top: '54.5%' }} />
-              <div className="xj-car xj-glide xj-car--cyan" style={{ left: '40%', top: '54.5%' }} />
-              <div className="xj-car xj-glide xj-car--violet" style={{ left: '58%', top: '54.5%' }} />
             </div>
           </section>
 
@@ -584,6 +507,23 @@ export default function HorizontalJourney() {
               </div>
             </div>
           </section>
+        </div>
+
+        {/* ── Continuous hero car overlay (screen-fixed on the road) ── */}
+        <div className="xj-herolayer">
+          <div ref={heroRef} className="xj-herocar">
+            <Vehicle color="brand" />
+            <span className="xj-seatdot xj-seatdot--a" />
+            <span className="xj-seatdot xj-seatdot--b" />
+            <span className="xj-conn xj-conn--a" />
+            <span className="xj-conn xj-conn--b" />
+            <span className="xj-pax xj-pax--a">
+              <User className="h-3.5 w-3.5" />
+            </span>
+            <span className="xj-pax xj-pax--b">
+              <User className="h-3.5 w-3.5" />
+            </span>
+          </div>
         </div>
       </div>
     </div>
