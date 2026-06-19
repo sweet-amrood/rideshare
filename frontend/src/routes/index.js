@@ -1,2 +1,2 @@
-export { marketingRoute } from './MarketingRoutes';
+export { marketingRoute, experienceRoute } from './MarketingRoutes';
 export { appRoute, legacyAppRoutes } from './AppRoutes';

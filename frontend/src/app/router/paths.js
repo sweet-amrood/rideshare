@@ -12,6 +12,7 @@ export const paths = {
   home: '/',
   about: '/about',
   contact: '/contact',
+  experience: '/experience',
   chooseMode: '/choose-mode',
   app: APP_BASE,
   login: appPath('/login'),
@@ -44,6 +45,7 @@ export function isMarketingPath(pathname = '') {
     pathname === paths.home ||
     pathname === paths.about ||
     pathname === paths.contact ||
+    pathname === paths.experience ||
     pathname === paths.chooseMode
   );
 }

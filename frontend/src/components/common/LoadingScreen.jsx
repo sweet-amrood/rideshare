@@ -2,9 +2,16 @@ import { motion } from 'framer-motion';
 import { Car } from 'lucide-react';
 import { env } from '@/config/env';
 
-export default function LoadingScreen({ message = 'Initializing Carpool Engine...' }) {
+export default function LoadingScreen({
+  message = 'Initializing Carpool Engine...',
+  fullscreen = false
+}) {
+  const rootClass = fullscreen
+    ? 'fixed inset-0 z-[60] flex h-screen items-center justify-center bg-slateCustom-900 overflow-hidden'
+    : 'flex h-screen items-center justify-center bg-slateCustom-900 overflow-hidden relative';
+
   return (
-    <div className="flex h-screen items-center justify-center bg-slateCustom-900 overflow-hidden relative">
+    <div className={rootClass}>
       {/* Ambient orbs */}
       <div className="orb orb-brand w-[600px] h-[600px] -top-48 -left-48 opacity-25 animate-pulse-glow" />
       <div className="orb orb-violet w-[400px] h-[400px] bottom-0 right-0 opacity-20 animate-pulse-glow" style={{ animationDelay: '1s' }} />

@@ -6,7 +6,7 @@ import { paths } from '@/app/router/paths';
 import AppButton from '@/components/common/AppButton';
 import ModeSwitcher from '@/components/common/ModeSwitcher';
 import PageTransition from '@/components/common/PageTransition';
-import MarketingPageLoader from '@/components/common/MarketingPageLoader';
+import LoadingScreen from '@/components/common/LoadingScreen';
 import useUserMode from '@/hooks/useUserMode';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -81,7 +81,7 @@ export default function MarketingLayout() {
       <main className="flex-1">
         <AnimatePresence mode="wait">
           <PageTransition key={location.pathname}>
-            <Suspense fallback={<MarketingPageLoader />}>
+            <Suspense fallback={<LoadingScreen message="Loading page…" fullscreen />}>
               <Outlet />
             </Suspense>
           </PageTransition>

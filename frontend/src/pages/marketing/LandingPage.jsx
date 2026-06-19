@@ -129,9 +129,9 @@ export default function LandingPage() {
                 {isLoggedIn ? 'Go to dashboard' : 'Get started free'}
                 <ArrowRight className="h-4 w-4" />
               </AppButton>
-              <Link to={paths.about} className="no-underline">
+              <Link to={paths.experience} className="no-underline">
                 <AppButton variant="secondary" size="lg" className="w-full sm:min-w-[180px]">
-                  How it works
+                  Experience the journey
                 </AppButton>
               </Link>
             </div>

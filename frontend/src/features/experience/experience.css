@@ -1,0 +1,461 @@
+/* ─────────────────────────────────────────────
+   HORIZONTAL JOURNEY (scrollytelling world)
+   Prefix: xj-  •  transforms only, no reflow
+───────────────────────────────────────────── */
+
+.xj-root {
+  position: relative;
+  background: #05070d;
+  color: #fff;
+  overflow: visible;
+}
+
+/* Pinned camera viewport */
+.xj-viewport {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* The wide world that slides left→right */
+.xj-world {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content; /* span all scenes so it can actually scroll */
+  height: 100vh;
+  will-change: transform;
+}
+
+/* Continuous environment behind every scene */
+.xj-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.xj-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(79, 94, 244, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 94, 244, 0.07) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+}
+
+/* The road band that ties all scenes together */
+.xj-road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 63%;
+  height: 116px;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, #0c1322 0%, #0a0f1b 100%);
+  box-shadow:
+    0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 0 rgba(255, 255, 255, 0.05),
+    0 30px 80px -20px rgba(0, 0, 0, 0.8);
+}
+
+.xj-lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.55) 0,
+    rgba(255, 255, 255, 0.55) 34px,
+    transparent 34px,
+    transparent 74px
+  );
+  background-size: 74px 3px;
+  opacity: 0.4;
+  animation: xj-dash 1.1s linear infinite;
+}
+.xj-lane.is-top {
+  top: 36%;
+}
+.xj-lane.is-mid {
+  top: 50%;
+  opacity: 0.6;
+}
+.xj-lane.is-bottom {
+  top: 64%;
+}
+
+@keyframes xj-dash {
+  to {
+    background-position: -74px 0;
+  }
+}
+
+/* Each scene = one full screen of the world */
+.xj-scene {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 100vw;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.xj-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Caption block */
+.xj-caption {
+  position: absolute;
+  z-index: 20;
+  left: clamp(20px, 7vw, 110px);
+  top: 16%;
+  max-width: min(560px, 80vw);
+  pointer-events: none;
+}
+.xj-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8ea0ff;
+  margin-bottom: 16px;
+}
+.xj-eyebrow::before {
+  content: '';
+  width: 26px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #4f5ef4, transparent);
+}
+.xj-title {
+  font-size: clamp(2.1rem, 5.4vw, 4.4rem);
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+}
+.xj-sub {
+  font-size: clamp(0.95rem, 1.5vw, 1.18rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+}
+.xj-grad {
+  background: linear-gradient(120deg, #6f7bff 0%, #a78bfa 50%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── CARS (DOM elements, transform-animated) ── */
+.xj-car {
+  position: absolute;
+  width: 48px;
+  height: 22px;
+  border-radius: 8px;
+  will-change: transform;
+  transform: translateZ(0);
+  box-shadow:
+    0 8px 18px -6px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.xj-car::before {
+  content: '';
+  position: absolute;
+  inset: 3px 12px auto 12px;
+  height: 9px;
+  border-radius: 4px;
+  background: rgba(8, 12, 22, 0.55);
+}
+.xj-car::after {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.45);
+  opacity: 0.65;
+}
+
+.xj-car--brand {
+  background: linear-gradient(135deg, #5b69f5, #7c3aed);
+}
+.xj-car--cyan {
+  background: linear-gradient(135deg, #22d3ee, #3b82f6);
+}
+.xj-car--violet {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+.xj-car--amber {
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+}
+.xj-car--rose {
+  background: linear-gradient(135deg, #fb7185, #e11d48);
+}
+.xj-car--slate {
+  background: linear-gradient(135deg, #64748b, #475569);
+}
+.xj-car--emerald {
+  background: linear-gradient(135deg, #34d399, #10b981);
+}
+
+/* ── NODES + ROUTES (scene 2/3/4/5) ── */
+.xj-node {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #7c8cff;
+  box-shadow: 0 0 0 4px rgba(124, 140, 255, 0.18), 0 0 22px 4px rgba(124, 140, 255, 0.5);
+  will-change: transform, opacity;
+}
+.xj-node.is-hub {
+  width: 20px;
+  height: 20px;
+  background: #22d3ee;
+  box-shadow: 0 0 0 6px rgba(34, 211, 238, 0.16), 0 0 30px 6px rgba(34, 211, 238, 0.55);
+}
+
+.xj-route {
+  position: absolute;
+  height: 3px;
+  border-radius: 3px;
+  transform-origin: left center;
+  will-change: transform, opacity;
+}
+.xj-route--ghost {
+  background: linear-gradient(90deg, rgba(124, 140, 255, 0.5), rgba(124, 140, 255, 0));
+}
+.xj-route--match {
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.85), rgba(124, 140, 255, 0.2));
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+}
+.xj-route--clean {
+  height: 5px;
+  background: linear-gradient(90deg, #4f5ef4, #22d3ee);
+  box-shadow: 0 0 26px rgba(79, 94, 244, 0.6);
+}
+
+/* Carpool pod rings (scene 4) */
+.xj-pod-ring {
+  position: absolute;
+  width: 150px;
+  height: 90px;
+  margin: -45px 0 0 -75px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.18) inset;
+  will-change: transform, opacity;
+}
+
+/* Decorative skyline blocks */
+.xj-block {
+  position: absolute;
+  bottom: 37%;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, rgba(30, 41, 70, 0.9), rgba(14, 19, 34, 0.9));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  will-change: transform, opacity;
+}
+
+/* ── STATS / CTA (scene 6) ── */
+.xj-hero {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  gap: 30px;
+}
+.xj-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+.xj-stat {
+  min-width: 150px;
+  padding: 20px 24px;
+  border-radius: 20px;
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px);
+}
+.xj-stat-num {
+  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1;
+}
+.xj-stat-label {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.xj-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ── OVERLAY CHROME ── */
+.xj-chrome {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.xj-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px clamp(16px, 4vw, 40px);
+}
+.xj-topbar > * {
+  pointer-events: auto;
+}
+.xj-progress-wrap {
+  position: absolute;
+  left: clamp(16px, 4vw, 40px);
+  right: clamp(16px, 4vw, 40px);
+  bottom: 26px;
+}
+.xj-progress-track {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.xj-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4f5ef4, #22d3ee);
+}
+.xj-progress-dots {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+.xj-dot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+  transition: color 0.3s ease;
+}
+.xj-dot::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+.xj-dot.is-active {
+  color: #fff;
+}
+.xj-dot.is-active::before {
+  background: #22d3ee;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.8);
+}
+.xj-dot-label {
+  display: none;
+}
+@media (min-width: 900px) {
+  .xj-dot-label {
+    display: inline;
+  }
+}
+
+.xj-scroll-hint {
+  position: absolute;
+  right: clamp(16px, 4vw, 40px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+.xj-scroll-hint span {
+  writing-mode: vertical-rl;
+}
+
+.xj-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+.xj-logo-mark {
+  height: 34px;
+  width: 34px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4f5ef4, #7c3aed);
+}
+
+/* ── REDUCED MOTION / FALLBACK ── */
+.xj-reduced .xj-viewport {
+  height: auto;
+  overflow: visible;
+}
+.xj-reduced .xj-world {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: none !important;
+}
+.xj-reduced .xj-bg {
+  display: none;
+}
+.xj-reduced .xj-scene {
+  width: 100%;
+  height: auto;
+  min-height: 92vh;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.xj-reduced .xj-scroll-hint {
+  display: none;
+}
