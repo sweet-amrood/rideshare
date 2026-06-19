@@ -215,7 +215,7 @@ export default function ActiveCarpoolSession({ booking, onDismiss }) {
         <div className="flex flex-wrap gap-2">
           {rideId && (isConfirmed || isPending) && (
             <Link
-              to={`/chat/${rideId}`}
+              to={paths.chat(rideId)}
               state={CARPOOL_RETURN}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500/20 border border-brand-500/40 text-brand-200 text-sm font-semibold no-underline hover:bg-brand-500/30"
             >
